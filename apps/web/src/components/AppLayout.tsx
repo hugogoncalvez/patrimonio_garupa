@@ -2,7 +2,6 @@ import { useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   AppBar,
-  Avatar,
   Box,
   Chip,
   Divider,
@@ -26,7 +25,6 @@ import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import LogoutIcon from "@mui/icons-material/Logout";
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import { useAuth, puedeVer } from "../auth/AuthContext";
 import type { Rol } from "../types";
 
@@ -71,9 +69,12 @@ export function AppLayout() {
   const contenidoDrawer = (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <Toolbar sx={{ gap: 1.5, px: 2.5 }}>
-        <Avatar sx={{ bgcolor: "primary.main", width: 38, height: 38 }}>
-          <AccountBalanceIcon fontSize="small" />
-        </Avatar>
+        <Box
+          component="img"
+          src="/escudo-icono.png"
+          alt="Escudo de Garupá"
+          sx={{ width: 38, height: 46, objectFit: "contain" }}
+        />
         <Box>
           <Typography variant="subtitle1" sx={{ fontWeight: 800, lineHeight: 1.1 }}>
             Patrimonio

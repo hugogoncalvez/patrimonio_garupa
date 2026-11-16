@@ -114,12 +114,25 @@ export function DashboardPage() {
           alignItems: { sm: "center" },
         }}
       >
-        <Box>
-          <Typography variant="h4">Panel de patrimonio</Typography>
-          <Typography color="text.secondary">
-            Resumen operativo de bienes, consumibles y movimientos.
-          </Typography>
-        </Box>
+        <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
+          <Box
+            component="img"
+            src="/escudo-icono.png"
+            alt="Escudo de Garupá"
+            sx={{
+              width: 52,
+              height: 63,
+              objectFit: "contain",
+              flexShrink: 0,
+            }}
+          />
+          <Box>
+            <Typography variant="h4">Panel de patrimonio</Typography>
+            <Typography color="text.secondary">
+              Resumen operativo de bienes, consumibles y movimientos.
+            </Typography>
+          </Box>
+        </Stack>
         <Stack direction="row" spacing={1}>
           <Button variant="outlined" onClick={() => navigate("/consumibles")}>
             Consumibles

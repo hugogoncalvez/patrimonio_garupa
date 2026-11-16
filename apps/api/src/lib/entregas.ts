@@ -45,7 +45,7 @@ function nombreCompleto(
 }
 
 function numeroActa(ejercicio: number, numero: number) {
-  return `ACTA-ENT-${ejercicio}-${String(numero).padStart(6, "0")}`;
+  return `E-${ejercicio}-${String(numero).padStart(6, "0")}`;
 }
 
 export async function crearEntregaConsumible(input: CrearEntregaInput) {

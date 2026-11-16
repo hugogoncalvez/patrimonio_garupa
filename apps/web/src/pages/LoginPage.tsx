@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import {
   Alert,
-  Avatar,
   Box,
   Button,
   Card,
@@ -14,7 +13,6 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { useAuth } from "../auth/AuthContext";
@@ -63,9 +61,12 @@ export function LoginPage() {
       <Card sx={{ width: "100%", maxWidth: 430 }}>
         <CardContent sx={{ p: { xs: 3, sm: 4.5 } }}>
           <Stack spacing={1} sx={{ alignItems: "center", mb: 3 }}>
-            <Avatar sx={{ bgcolor: "primary.main", width: 56, height: 56 }}>
-              <AccountBalanceIcon />
-            </Avatar>
+            <Box
+              component="img"
+              src="/escudo-icono.png"
+              alt="Escudo de Garupá"
+              sx={{ width: 82, height: 100, objectFit: "contain" }}
+            />
             <Typography variant="h5" sx={{ textAlign: "center" }}>
               Patrimonio Garupá
             </Typography>

@@ -713,7 +713,7 @@ function AreasTab() {
           <TableHead>
             <TableRow>
               <TableCell>Nombre</TableCell>
-              <TableCell>Dirección</TableCell>
+              <TableCell>Domicilio</TableCell>
               <TableCell>Responsable</TableCell>
               <TableCell align="right">Bienes</TableCell>
               <TableCell align="right">Personas</TableCell>
@@ -793,11 +793,12 @@ function AreasTab() {
               required
             />
             <TextField
-              label="Dirección"
+              label="Domicilio"
               value={form.direccion}
               onChange={(event) =>
                 setForm({ ...form, direccion: event.target.value })
               }
+              helperText="Calle, número y localidad (opcional)"
             />
             <TextField
               select
@@ -806,6 +807,7 @@ function AreasTab() {
               onChange={(event) =>
                 setForm({ ...form, responsableId: event.target.value })
               }
+              helperText="Opcional. Persona a cargo del área; se puede asignar después."
             >
               <MenuItem value="">Sin responsable</MenuItem>
               {personas?.map((persona) => (
@@ -1055,6 +1057,7 @@ function PersonasTab() {
               onChange={(event) =>
                 setForm({ ...form, areaId: event.target.value })
               }
+              helperText="Opcional. Área donde se desempeña; se puede asignar después."
             >
               <MenuItem value="">Sin área</MenuItem>
               {areas?.map((area) => (

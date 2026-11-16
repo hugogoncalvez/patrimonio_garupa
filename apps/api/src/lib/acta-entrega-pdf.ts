@@ -6,6 +6,7 @@ import {
   type PDFFont,
   type PDFPage,
 } from "pdf-lib";
+import { ESCUDO_PNG_BASE64 } from "./escudo-base64.js";
 
 interface MovimientoActa {
   nombreConsumibleSnapshot?: string | null;
@@ -74,6 +75,10 @@ export async function generarActaEntregaPdf(entrega: EntregaActa) {
   const pdf = await PDFDocument.create();
   const normal = await pdf.embedFont(StandardFonts.Helvetica);
   const negrita = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const escudo = await pdf.embedPng(Buffer.from(ESCUDO_PNG_BASE64, "base64"));
+
+  const escudoAlto = 50;
+  const escudoAncho = (escudo.width / escudo.height) * escudoAlto;
 
   pdf.setTitle(`Acta de entrega ${entrega.numero}`);
   pdf.setAuthor("Sistema de Gestión Patrimonial - Municipalidad de Garupá");
@@ -86,22 +91,31 @@ export async function generarActaEntregaPdf(entrega: EntregaActa) {
     const { height } = page.getSize();
     let cursor = height - MARGEN;
 
-    page.drawText("MUNICIPALIDAD DE GARUPÁ", {
+    page.drawImage(escudo, {
       x: MARGEN,
+      y: cursor - escudoAlto + 2,
+      width: escudoAncho,
+      height: escudoAlto,
+    });
+
+    const textoX = MARGEN + escudoAncho + 12;
+
+    page.drawText("MUNICIPALIDAD DE GARUPÁ", {
+      x: textoX,
       y: cursor,
       size: 15,
       font: negrita,
       color: rgb(0.06, 0.3, 0.23),
     });
     page.drawText("Sistema de Gestión Patrimonial", {
-      x: MARGEN,
+      x: textoX,
       y: cursor - 16,
       size: 9,
       font: normal,
       color: rgb(0.35, 0.35, 0.35),
     });
     page.drawText("ACTA DE ENTREGA DE CONSUMIBLES", {
-      x: MARGEN,
+      x: textoX,
       y: cursor - 44,
       size: 13,
       font: negrita,
@@ -321,7 +335,7 @@ export async function generarActaEntregaPdf(entrega: EntregaActa) {
     thickness: 0.6,
     color: rgb(0.2, 0.2, 0.2),
   });
-  page.drawText("Firma", {
+  page.drawText("Firma de quien recibe", {
     x: firmaX,
     y: firmaY - 12,
     size: 8,
