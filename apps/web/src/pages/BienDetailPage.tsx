@@ -62,6 +62,7 @@ function Dato({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 export function BienDetailPage() {
+  const documentosHabilitados = !import.meta.env.PROD;
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -271,7 +272,7 @@ export function BienDetailPage() {
                 <Tab label="Ubicaciones" />
                 <Tab label="Custodia" />
                 <Tab label="Compras" />
-                <Tab label="Documentos" />
+                {documentosHabilitados ? <Tab label="Documentos" /> : null}
               </Tabs>
               <Divider sx={{ mb: 1 }} />
 
@@ -332,7 +333,7 @@ export function BienDetailPage() {
                 </List>
               )}
 
-              {tab === 3 && (
+              {documentosHabilitados && tab === 3 && (
                 <DocumentosBien
                   bienId={bien.id}
                   documentos={bien.documentos ?? []}
