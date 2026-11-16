@@ -1,0 +1,423 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Rol {
+  CONTABLE
+  PATRIMONIO
+}
+
+enum TipoIncorporacion {
+  COMPRA
+  DONACION
+  TRANSFERENCIA
+  PRESTAMO
+  OTRO
+}
+
+enum TipoMovimientoStock {
+  INGRESO
+  ENTREGA
+  AJUSTE
+}
+
+enum TipoMovimientoCustodia {
+  ASIGNACION
+  TRANSFERENCIA
+  DEVOLUCION
+}
+
+enum TipoMovimientoUbicacion {
+  ASIGNACION
+  TRANSFERENCIA
+  DEVOLUCION
+}
+
+enum TipoDocumento {
+  FACTURA
+  REMITO
+  ACTA
+  RESOLUCION
+  OTRO
+}
+
+enum EstadoEntrega {
+  REGISTRADA
+  ANULADA
+}
+
+enum AccionAuditoria {
+  CREAR
+  ACTUALIZAR
+  ELIMINAR
+  LOGIN
+  IMPRIMIR
+  ANULAR
+}
+
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  nombre    String   @db.VarChar(100)
+  apellido  String   @db.VarChar(100)
+  usuario   String   @unique @db.VarChar(50)
+  pass      String   @db.VarChar(255)
+  rol       Rol      @default(PATRIMONIO)
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  auditorias           Auditoria[]
+  movimientosStock     MovimientoStock[]
+  movimientosCustodia  MovimientoCustodia[]
+  movimientosUbicacion MovimientoUbicacion[]
+  documentos           Documento[]
+  bienesCreados        Bien[]                @relation("BienCreadoPor")
+  comprasCreadas       Compra[]              @relation("CompraCreadaPor")
+  entregasCreadas      EntregaConsumible[]   @relation("EntregaCreadaPor")
+  entregasAnuladas     EntregaConsumible[]   @relation("EntregaAnuladaPor")
+}
+
+model Area {
+  id            Int      @id @default(autoincrement())
+  nombre        String   @unique @db.VarChar(120)
+  direccion     String?  @db.VarChar(200)
+  activo        Boolean  @default(true)
+  responsableId Int?
+  responsable   Persona? @relation("AreaResponsable", fields: [responsableId], references: [id], onDelete: SetNull)
+
+  personas            Persona[]             @relation("PersonaArea")
+  bienes              Bien[]                @relation("BienArea")
+  movimientosOrigen   MovimientoUbicacion[] @relation("UbicacionOrigen")
+  movimientosDestino  MovimientoUbicacion[] @relation("UbicacionDestino")
+  movimientosStock    MovimientoStock[]     @relation("StockAreaDestino")
+  entregasConsumibles EntregaConsumible[]   @relation("EntregaAreaDestino")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([responsableId])
+}
+
+model Persona {
+  id       Int     @id @default(autoincrement())
+  nombre   String  @db.VarChar(100)
+  apellido String  @db.VarChar(100)
+  dni      String? @unique @db.VarChar(20)
+  cargo    String? @db.VarChar(120)
+  activo   Boolean @default(true)
+  areaId   Int?
+  area     Area?   @relation("PersonaArea", fields: [areaId], references: [id], onDelete: SetNull)
+
+  areasResponsable Area[]               @relation("AreaResponsable")
+  bienes           Bien[]               @relation("BienSubresponsable")
+  custodiaOrigen   MovimientoCustodia[] @relation("CustodiaOrigen")
+  custodiaDestino  MovimientoCustodia[] @relation("CustodiaDestino")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([areaId])
+}
+
+model Rubro {
+  id            Int     @id @default(autoincrement())
+  nombre        String  @unique @db.VarChar(120)
+  codigoInterno String? @unique @db.VarChar(30)
+  codigoCuenta  String? @db.VarChar(30)
+  activo        Boolean @default(true)
+
+  bienes Bien[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EstadoBien {
+  id     Int     @id @default(autoincrement())
+  nombre String  @unique @db.VarChar(80)
+  activo Boolean @default(true)
+
+  bienes Bien[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Bien {
+  id                   Int     @id @default(autoincrement())
+  codigoInventario     String  @unique @db.VarChar(40)
+  numeroIdentificacion String  @unique @db.VarChar(40)
+  descripcion          String  @db.VarChar(300)
+  marca                String? @db.VarChar(120)
+  modelo               String? @db.VarChar(120)
+  numeroSerie          String? @db.VarChar(120)
+  numeroMotor          String? @db.VarChar(120)
+  patente              String? @db.VarChar(30)
+  material             String? @db.VarChar(120)
+  medidas              String? @db.VarChar(120)
+  color                String? @db.VarChar(80)
+
+  rubroId Int
+  rubro   Rubro @relation(fields: [rubroId], references: [id], onDelete: Restrict)
+
+  estadoId Int
+  estado   EstadoBien @relation(fields: [estadoId], references: [id], onDelete: Restrict)
+
+  areaId Int?
+  area   Area? @relation("BienArea", fields: [areaId], references: [id], onDelete: SetNull)
+
+  subresponsableId Int?
+  subresponsable   Persona? @relation("BienSubresponsable", fields: [subresponsableId], references: [id], onDelete: SetNull)
+
+  tipoIncorporacion TipoIncorporacion @default(COMPRA)
+  fechaAlta         DateTime          @db.Date
+  valorHistorico    Decimal?          @db.Decimal(14, 2)
+  observaciones     String?           @db.Text
+  activo            Boolean           @default(true)
+  fechaBaja         DateTime?         @db.Date
+  motivoBaja        String?           @db.VarChar(200)
+  destinoBaja       String?           @db.VarChar(200)
+
+  numeroOrdenPago      String?   @db.VarChar(40)
+  numeroResolucionBaja String?   @db.VarChar(40)
+  fechaResolucionBaja  DateTime? @db.Date
+  valorBaja            Decimal?  @db.Decimal(14, 2)
+  ejercicioAlta        Int?
+
+  creadoPorId Int?
+  creadoPor   Usuario? @relation("BienCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+
+  movimientosCustodia  MovimientoCustodia[]
+  movimientosUbicacion MovimientoUbicacion[]
+  documentos           Documento[]
+  compraDetalles       CompraDetalle[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([rubroId])
+  @@index([estadoId])
+  @@index([areaId])
+  @@index([subresponsableId])
+  @@index([activo])
+}
+
+model CategoriaConsumible {
+  id     Int     @id @default(autoincrement())
+  nombre String  @unique @db.VarChar(100)
+  activo Boolean @default(true)
+
+  consumibles Consumible[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Consumible {
+  id           Int                  @id @default(autoincrement())
+  nombre       String               @db.VarChar(150)
+  categoriaId  Int?
+  categoria    CategoriaConsumible? @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+  unidadMedida String               @default("unidad") @db.VarChar(20)
+  stockActual  Decimal              @default(0) @db.Decimal(14, 3)
+  stockMinimo  Decimal              @default(0) @db.Decimal(14, 3)
+  activo       Boolean              @default(true)
+
+  movimientos    MovimientoStock[]
+  compraDetalles CompraDetalle[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoriaId])
+  @@index([activo])
+  @@index([nombre])
+}
+
+model Compra {
+  id                Int      @id @default(autoincrement())
+  fecha             DateTime @db.Date
+  proveedor         String?  @db.VarChar(150)
+  tipoComprobante   String?  @db.VarChar(50)
+  numeroComprobante String?  @db.VarChar(50)
+  numeroExpediente  String?  @db.VarChar(50)
+  observaciones     String?  @db.Text
+
+  creadoPorId Int?
+  creadoPor   Usuario? @relation("CompraCreadaPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+
+  detalles         CompraDetalle[]
+  documentos       Documento[]
+  movimientosStock MovimientoStock[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([fecha])
+}
+
+model CompraDetalle {
+  id             Int         @id @default(autoincrement())
+  compraId       Int
+  compra         Compra      @relation(fields: [compraId], references: [id], onDelete: Cascade)
+  bienId         Int?
+  bien           Bien?       @relation(fields: [bienId], references: [id], onDelete: SetNull)
+  consumibleId   Int?
+  consumible     Consumible? @relation(fields: [consumibleId], references: [id], onDelete: SetNull)
+  cantidad       Decimal     @default(1) @db.Decimal(14, 3)
+  precioUnitario Decimal?    @db.Decimal(14, 2)
+  descripcion    String?     @db.VarChar(250)
+  createdAt      DateTime    @default(now())
+
+  @@index([compraId])
+  @@index([bienId])
+  @@index([consumibleId])
+}
+
+model MovimientoStock {
+  id                       Int                 @id @default(autoincrement())
+  consumibleId             Int
+  consumible               Consumible          @relation(fields: [consumibleId], references: [id], onDelete: Cascade)
+  tipo                     TipoMovimientoStock
+  cantidad                 Decimal             @db.Decimal(14, 3)
+  areaDestinoId            Int?
+  areaDestino              Area?               @relation("StockAreaDestino", fields: [areaDestinoId], references: [id], onDelete: SetNull)
+  compraId                 Int?
+  compra                   Compra?             @relation(fields: [compraId], references: [id], onDelete: SetNull)
+  usuarioId                Int?
+  usuario                  Usuario?            @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  observaciones            String?             @db.Text
+  entregaId                Int?
+  entrega                  EntregaConsumible?  @relation(fields: [entregaId], references: [id], onDelete: Restrict)
+  nombreConsumibleSnapshot String?             @db.VarChar(150)
+  unidadMedidaSnapshot     String?             @db.VarChar(20)
+  orden                    Int?
+  fecha                    DateTime            @default(now())
+  createdAt                DateTime            @default(now())
+
+  @@index([consumibleId])
+  @@index([areaDestinoId])
+  @@index([compraId])
+  @@index([entregaId])
+  @@index([fecha])
+}
+
+model ContadorActa {
+  ejercicio    Int      @id
+  ultimoNumero Int      @default(0)
+  updatedAt    DateTime @updatedAt
+}
+
+model EntregaConsumible {
+  id                        Int           @id @default(autoincrement())
+  numero                    String        @unique @db.VarChar(30)
+  fecha                     DateTime      @db.Date
+  areaDestinoId             Int
+  areaDestino               Area          @relation("EntregaAreaDestino", fields: [areaDestinoId], references: [id], onDelete: Restrict)
+  areaNombreSnapshot        String        @db.VarChar(120)
+  responsableNombreSnapshot String?       @db.VarChar(220)
+  firmanteNombre            String        @db.VarChar(150)
+  firmanteDni               String        @db.VarChar(20)
+  usuarioId                 Int?
+  usuario                   Usuario?      @relation("EntregaCreadaPor", fields: [usuarioId], references: [id], onDelete: SetNull)
+  usuarioNombreSnapshot     String?       @db.VarChar(220)
+  observaciones             String?       @db.Text
+  estado                    EstadoEntrega @default(REGISTRADA)
+  anuladaPorId              Int?
+  anuladaPor                Usuario?      @relation("EntregaAnuladaPor", fields: [anuladaPorId], references: [id], onDelete: SetNull)
+  fechaAnulacion            DateTime?
+  motivoAnulacion           String?       @db.Text
+  createdAt                 DateTime      @default(now())
+
+  movimientos MovimientoStock[]
+
+  @@index([fecha])
+  @@index([areaDestinoId])
+  @@index([estado])
+}
+
+model MovimientoCustodia {
+  id               Int                    @id @default(autoincrement())
+  bienId           Int
+  bien             Bien                   @relation(fields: [bienId], references: [id], onDelete: Cascade)
+  tipo             TipoMovimientoCustodia
+  personaOrigenId  Int?
+  personaOrigen    Persona?               @relation("CustodiaOrigen", fields: [personaOrigenId], references: [id], onDelete: SetNull)
+  personaDestinoId Int?
+  personaDestino   Persona?               @relation("CustodiaDestino", fields: [personaDestinoId], references: [id], onDelete: SetNull)
+  usuarioId        Int?
+  usuario          Usuario?               @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  fecha            DateTime               @default(now())
+  observaciones    String?                @db.Text
+  createdAt        DateTime               @default(now())
+
+  @@index([bienId])
+  @@index([personaOrigenId])
+  @@index([personaDestinoId])
+  @@index([fecha])
+}
+
+model MovimientoUbicacion {
+  id            Int                     @id @default(autoincrement())
+  bienId        Int
+  bien          Bien                    @relation(fields: [bienId], references: [id], onDelete: Cascade)
+  tipo          TipoMovimientoUbicacion
+  areaOrigenId  Int?
+  areaOrigen    Area?                   @relation("UbicacionOrigen", fields: [areaOrigenId], references: [id], onDelete: SetNull)
+  areaDestinoId Int?
+  areaDestino   Area?                   @relation("UbicacionDestino", fields: [areaDestinoId], references: [id], onDelete: SetNull)
+  usuarioId     Int?
+  usuario       Usuario?                @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  fecha         DateTime                @default(now())
+  motivo        String?                 @db.VarChar(200)
+  observaciones String?                 @db.Text
+  createdAt     DateTime                @default(now())
+
+  @@index([bienId])
+  @@index([areaOrigenId])
+  @@index([areaDestinoId])
+  @@index([fecha])
+}
+
+model Documento {
+  id            Int           @id @default(autoincrement())
+  tipo          TipoDocumento
+  numero        String?       @db.VarChar(60)
+  fecha         DateTime?     @db.Date
+  nombreArchivo String        @db.VarChar(255)
+  archivoUrl    String        @db.VarChar(500)
+  mimeType      String?       @db.VarChar(100)
+  tamano        Int?
+  bienId        Int?
+  bien          Bien?         @relation(fields: [bienId], references: [id], onDelete: Cascade)
+  compraId      Int?
+  compra        Compra?       @relation(fields: [compraId], references: [id], onDelete: Cascade)
+  usuarioId     Int?
+  usuario       Usuario?      @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  createdAt     DateTime      @default(now())
+
+  @@index([bienId])
+  @@index([compraId])
+}
+
+model Auditoria {
+  id              Int             @id @default(autoincrement())
+  usuarioId       Int?
+  usuario         Usuario?        @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  accion          AccionAuditoria
+  entidad         String          @db.VarChar(80)
+  entidadId       Int?
+  datosAnteriores Json?
+  datosNuevos     Json?
+  ip              String?         @db.VarChar(60)
+  fecha           DateTime        @default(now())
+
+  @@index([usuarioId])
+  @@index([entidad, entidadId])
+  @@index([fecha])
+}

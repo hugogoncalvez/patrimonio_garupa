@@ -1,0 +1,56 @@
+import { Navigate, Route, Routes } from "react-router-dom";
+import { AppLayout } from "./components/AppLayout";
+import { ProtectedRoute, RutaContable } from "./components/ProtectedRoute";
+import { LoginPage } from "./pages/LoginPage";
+import { DashboardPage } from "./pages/DashboardPage";
+import { BienesPage } from "./pages/BienesPage";
+import { BienFormPage } from "./pages/BienFormPage";
+import { BienDetailPage } from "./pages/BienDetailPage";
+import { ConsumiblesPage } from "./pages/ConsumiblesPage";
+import { EntregasPage } from "./pages/EntregasPage";
+import { EntregaFormPage } from "./pages/EntregaFormPage";
+import { EntregaDetailPage } from "./pages/EntregaDetailPage";
+import { ComprasPage } from "./pages/ComprasPage";
+import { CompraFormPage } from "./pages/CompraFormPage";
+import { CatalogosPage } from "./pages/CatalogosPage";
+import { UsuariosPage } from "./pages/UsuariosPage";
+import { NotFoundPage } from "./pages/NotFoundPage";
+
+export function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route
+        element={
+          <ProtectedRoute>
+            <AppLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<DashboardPage />} />
+        <Route path="/bienes" element={<BienesPage />} />
+        <Route path="/bienes/nuevo" element={<BienFormPage />} />
+        <Route path="/bienes/:id" element={<BienDetailPage />} />
+        <Route path="/bienes/:id/editar" element={<BienFormPage />} />
+        <Route path="/consumibles" element={<ConsumiblesPage />} />
+        <Route path="/entregas" element={<EntregasPage />} />
+        <Route path="/entregas/nueva" element={<EntregaFormPage />} />
+        <Route path="/entregas/:id" element={<EntregaDetailPage />} />
+        <Route path="/compras" element={<ComprasPage />} />
+        <Route path="/compras/nueva" element={<CompraFormPage />} />
+        <Route path="/configuracion" element={<CatalogosPage />} />
+        <Route path="/catalogos" element={<CatalogosPage />} />
+        <Route
+          path="/usuarios"
+          element={
+            <RutaContable>
+              <UsuariosPage />
+            </RutaContable>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Route>
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
+  );
+}
