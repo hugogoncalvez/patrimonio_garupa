@@ -11,6 +11,7 @@ import {
   InputAdornment,
   Stack,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -83,10 +84,7 @@ export function LoginPage() {
               sx={{ width: 82, height: 100, objectFit: "contain" }}
             />
             <Typography variant="h5" sx={{ textAlign: "center" }}>
-              Patrimonio Garupá
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center" }}>
-              Sistema de gestión patrimonial municipal
+              Municipalidad de Garupá
             </Typography>
           </Stack>
 
@@ -162,13 +160,15 @@ export function LoginPage() {
             </Stack>
           </Box>
 
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ display: "block", textAlign: "center", mt: 3 }}
-          >
-            Municipalidad de Garupá · Etapa 1
-          </Typography>
+          <Tooltip title="Desarrollador Hugo Goncalvez" arrow placement="top">
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ display: "block", textAlign: "center", mt: 3 }}
+            >
+              Sistema de gestión patrimonial municipal
+            </Typography>
+          </Tooltip>
         </CardContent>
       </Card>
     </Box>
