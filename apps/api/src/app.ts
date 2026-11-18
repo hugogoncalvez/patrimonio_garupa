@@ -55,3 +55,5 @@ app.use("/api/auditoria", auditoriaRouter);
 
 app.use(notFound);
 app.use(errorHandler);
+
+export default app;
