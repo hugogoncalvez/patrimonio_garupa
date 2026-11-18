@@ -278,7 +278,18 @@ consumiblesRouter.post("/:id/movimientos", async (req, res) => {
       entidad: "Consumible",
       entidadId: id,
       datosAnteriores: consumible,
-      datosNuevos: actualizado,
+      datosNuevos: {
+        ...actualizado,
+        movimiento: {
+          id: movimiento.id,
+          tipo: movimiento.tipo,
+          cantidad: movimiento.cantidad,
+          areaDestinoId: movimiento.areaDestinoId,
+          areaDestino: movimiento.areaDestino,
+          observaciones: movimiento.observaciones,
+          fecha: movimiento.fecha,
+        },
+      },
       ip: req.ip,
     });
 

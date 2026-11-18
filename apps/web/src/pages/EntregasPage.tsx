@@ -21,6 +21,7 @@ import {
   Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SearchIcon from "@mui/icons-material/Search";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useNavigate } from "react-router-dom";
@@ -57,6 +58,15 @@ export function EntregasPage() {
 
   return (
     <Stack spacing={2.5}>
+      <Box>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate("/consumibles")}
+        >
+          Volver
+        </Button>
+      </Box>
+
       <Box
         sx={{
           display: "flex",

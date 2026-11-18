@@ -23,6 +23,7 @@ export interface EntregaActa {
   responsableNombreSnapshot?: string | null;
   firmanteNombre: string;
   firmanteDni: string;
+  usuario?: { nombre: string; apellido: string } | null;
   usuarioNombreSnapshot?: string | null;
   observaciones?: string | null;
   estado: string;
@@ -93,6 +94,27 @@ function centrar(
   });
 }
 
+function formatearRegistrante(entrega: EntregaActa) {
+  const snapshot = entrega.usuarioNombreSnapshot?.trim();
+
+  if (snapshot?.includes(",")) {
+    return snapshot.endsWith(".") ? snapshot : `${snapshot}.`;
+  }
+
+  const usuario = entrega.usuario;
+  if (usuario?.nombre.trim() && usuario.apellido.trim()) {
+    return `${usuario.apellido.trim()}, ${usuario.nombre.trim()}.`;
+  }
+
+  if (!snapshot) return "-";
+
+  const partes = snapshot.split(/\s+/);
+  if (partes.length === 1) return `${snapshot}.`;
+
+  const apellido = partes.pop()!;
+  return `${apellido}, ${partes.join(" ")}.`;
+}
+
 export async function generarActaEntregaPdf(entrega: EntregaActa) {
   const pdf = await PDFDocument.create();
   const normal = await pdf.embedFont(StandardFonts.Helvetica);
@@ -102,7 +124,7 @@ export async function generarActaEntregaPdf(entrega: EntregaActa) {
     Buffer.from(MUNICIPIO_SALUDABLE_PNG_BASE64, "base64"),
   );
 
-  const escudoAlto = 50;
+  const escudoAlto = 64;
   const escudoAncho = (escudo.width / escudo.height) * escudoAlto;
   const saludableAlto = 38;
   const saludableAncho =
@@ -130,6 +152,18 @@ export async function generarActaEntregaPdf(entrega: EntregaActa) {
       y: cursor - saludableAlto + 2,
       width: saludableAncho,
       height: saludableAlto,
+    });
+
+    const patrimonio = "Patrimonio";
+    page.drawText(patrimonio, {
+      x:
+        ANCHO -
+        MARGEN -
+        saludableAncho / 2 -
+        negrita.widthOfTextAtSize(patrimonio, 11) / 2,
+      y: cursor - saludableAlto - 11,
+      size: 11,
+      font: negrita,
     });
 
     centrar(page, "MUNICIPALIDAD DE GARUPÁ", negrita, 20, cursor, VERDE);
@@ -196,7 +230,7 @@ export async function generarActaEntregaPdf(entrega: EntregaActa) {
     ["Responsable del área", entrega.responsableNombreSnapshot ?? "Sin responsable"],
     ["Recibe", entrega.firmanteNombre],
     ["DNI", entrega.firmanteDni],
-    ["Registrado por", entrega.usuarioNombreSnapshot ?? "-"],
+    ["Registrado por", formatearRegistrante(entrega)],
     ["Fecha", fechaCorta(entrega.fecha)],
     ["Estado", entrega.estado === "ANULADA" ? "ANULADA" : "REGISTRADA"],
   ];

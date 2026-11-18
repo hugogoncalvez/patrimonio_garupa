@@ -199,7 +199,9 @@ export function ConsumiblesPage() {
         <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
           <Button
             variant="outlined"
-            onClick={() => navigate("/configuracion?tab=2")}
+            onClick={() =>
+              navigate("/configuracion?tab=2&volver=consumibles")
+            }
           >
             Categorías
           </Button>

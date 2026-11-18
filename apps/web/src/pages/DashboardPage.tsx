@@ -20,6 +20,7 @@ import WarehouseIcon from "@mui/icons-material/Warehouse";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "@mui/material/styles";
 import { api } from "../lib/api";
 import { ErrorCarga } from "../components/ErrorCarga";
 import { formatoFechaHora, formatoNumero } from "../lib/format";
@@ -73,6 +74,7 @@ function StatCard({
 }
 
 export function DashboardPage() {
+  const theme = useTheme();
   const navigate = useNavigate();
   const { data, isLoading, error, refetch } = useQuery<DashboardData>({
     queryKey: ["dashboard"],
@@ -155,28 +157,28 @@ export function DashboardPage() {
           valor={data.bienes.activos}
           detalle={`${data.bienes.total} registrados · ${data.bienes.baja} de baja`}
           icono={<Inventory2Icon />}
-          color="#0f4c3a"
+          color={theme.palette.primary.main}
         />
         <StatCard
           titulo="Consumibles activos"
           valor={data.consumibles.activos}
           detalle={`${data.consumibles.total} en catálogo`}
           icono={<WarehouseIcon />}
-          color="#1565c0"
+          color={theme.palette.mode === "dark" ? "#64b5f6" : "#1565c0"}
         />
         <StatCard
           titulo="Stock bajo"
           valor={data.consumibles.stockBajo}
           detalle="Requieren reposición"
           icono={<WarningAmberIcon />}
-          color="#ed6c02"
+          color={theme.palette.warning.main}
         />
         <StatCard
           titulo="Compras del mes"
           valor={data.comprasMes}
           detalle="Ingresos registrados"
           icono={<ShoppingCartIcon />}
-          color="#6a1b9a"
+          color={theme.palette.mode === "dark" ? "#ce93d8" : "#6a1b9a"}
         />
       </Box>
 

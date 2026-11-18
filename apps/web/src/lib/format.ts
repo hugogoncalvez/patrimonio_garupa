@@ -35,6 +35,29 @@ export function formatoFechaHora(value?: string | null): string {
   });
 }
 
+export function formatoRegistrante(
+  snapshot?: string | null,
+  usuario?: { nombre: string; apellido: string } | null,
+): string {
+  const valor = snapshot?.trim();
+
+  if (valor?.includes(",")) {
+    return valor.endsWith(".") ? valor : `${valor}.`;
+  }
+
+  if (usuario?.nombre.trim() && usuario.apellido.trim()) {
+    return `${usuario.apellido.trim()}, ${usuario.nombre.trim()}.`;
+  }
+
+  if (!valor) return "-";
+
+  const partes = valor.split(/\s+/);
+  if (partes.length === 1) return `${valor}.`;
+
+  const apellido = partes.pop()!;
+  return `${apellido}, ${partes.join(" ")}.`;
+}
+
 export function formatoMoneda(value?: string | number | null): string {
   if (value === null || value === undefined || value === "") return "-";
   const number = Number(value);

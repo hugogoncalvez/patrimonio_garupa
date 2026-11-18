@@ -10,10 +10,16 @@ export const catalogosRouter = Router();
 
 catalogosRouter.use(requireAuth);
 
+const codigoCategoriaOpcional = z.preprocess(
+  (value) => (value === "" || value === null || value === undefined ? null : value),
+  z.coerce.number().int().min(1).max(7).nullable().optional(),
+);
+
 const rubroSchema = z.object({
   nombre: z.string().trim().min(1).max(120),
   codigoInterno: textoOpcional(30),
   codigoCuenta: textoOpcional(30),
+  codigoCategoria: codigoCategoriaOpcional,
   activo: z.boolean().optional(),
 });
 
@@ -73,6 +79,19 @@ catalogosRouter.get("/rubros", async (_req, res) => {
 
 catalogosRouter.post("/rubros", async (req, res) => {
   const data = rubroSchema.parse(req.body);
+
+  if (data.codigoCategoria) {
+    const existente = await prisma.rubro.findUnique({
+      where: { codigoCategoria: data.codigoCategoria },
+    });
+    if (existente) {
+      throw new HttpError(
+        409,
+        `El código de categoría ${data.codigoCategoria} ya está asignado a "${existente.nombre}"`,
+      );
+    }
+  }
+
   const creado = await prisma.rubro.create({ data });
 
   await registrarAuditoria(prisma, {
@@ -94,6 +113,18 @@ catalogosRouter.patch("/rubros/:id", async (req, res) => {
 
   if (!anterior) {
     throw new HttpError(404, "Rubro no encontrado");
+  }
+
+  if (data.codigoCategoria) {
+    const existente = await prisma.rubro.findUnique({
+      where: { codigoCategoria: data.codigoCategoria },
+    });
+    if (existente && existente.id !== id) {
+      throw new HttpError(
+        409,
+        `El código de categoría ${data.codigoCategoria} ya está asignado a "${existente.nombre}"`,
+      );
+    }
   }
 
   const actualizado = await prisma.rubro.update({ where: { id }, data });

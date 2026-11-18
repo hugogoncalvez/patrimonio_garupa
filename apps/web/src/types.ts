@@ -16,6 +16,7 @@ export interface Rubro {
   nombre: string;
   codigoInterno?: string | null;
   codigoCuenta?: string | null;
+  codigoCategoria?: number | null;
   activo: boolean;
   _count?: { bienes: number };
 }
@@ -91,7 +92,8 @@ export interface Bien {
   movimientosCustodia?: MovimientoCustodia[];
   movimientosUbicacion?: MovimientoUbicacion[];
   documentos?: Documento[];
-  compraDetalles?: CompraDetalle[];
+  compraDetalle?: CompraDetalle | null;
+  actaRecepcion?: { id: number; numero: string; fecha: string } | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -195,37 +197,92 @@ export interface EntregaConsumible {
   _count?: { movimientos: number };
 }
 
+export type Organismo = "DE" | "HCD";
+export type EstadoCompra = "REGISTRADA" | "RECIBIDA_PARCIAL" | "RECIBIDA";
+
+export interface Proveedor {
+  id: number;
+  nombre: string;
+  cuit?: string | null;
+  telefono?: string | null;
+  email?: string | null;
+  direccion?: string | null;
+  activo?: boolean;
+}
+
+export interface CompraComprobante {
+  id?: number;
+  tipo: string;
+  numero?: string | null;
+  fecha?: string | null;
+}
+
+export interface BienResumen {
+  id: number;
+  codigoInventario: string;
+  numeroIdentificacion?: string;
+  descripcion: string;
+  estado?: { id: number; nombre: string } | null;
+}
+
 export interface CompraDetalle {
   id: number;
   compraId?: number;
-  compra?: {
+  tipo: "INVENTARIABLE" | "CONSUMIBLE";
+  rubroId?: number | null;
+  rubro?: {
     id: number;
-    proveedor?: string | null;
-    fecha: string;
+    nombre: string;
+    codigoCategoria?: number | null;
+    codigoCuenta?: string | null;
   } | null;
+  consumibleId?: number | null;
+  consumible?: { id: number; nombre: string; unidadMedida: string } | null;
   cantidad: string | number;
+  cantidadRecibida: string | number;
   precioUnitario?: string | number | null;
   descripcion?: string | null;
-  bienId?: number | null;
-  consumibleId?: number | null;
-  bien?: {
+  bienes?: BienResumen[];
+  actaDetalles?: ActaRecepcionDetalle[];
+  compra?: {
     id: number;
-    codigoInventario: string;
-    numeroIdentificacion: string;
-    descripcion: string;
+    fecha: string;
+    proveedor?: string | null;
+    numeroOrdenPago?: string | null;
+    comprobantes?: CompraComprobante[];
   } | null;
-  consumible?: { id: number; nombre: string; unidadMedida: string } | null;
+}
+
+export interface ActaRecepcionDetalle {
+  id: number;
+  cantidad: string | number;
+  compraDetalle?: CompraDetalle | null;
+  bienes?: BienResumen[];
+}
+
+export interface ActaRecepcion {
+  id: number;
+  numero: string;
+  fecha: string;
+  organismo?: Organismo;
+  observaciones?: string | null;
+  usuario?: { id: number; nombre: string; apellido: string } | null;
+  detalles?: ActaRecepcionDetalle[];
 }
 
 export interface Compra {
   id: number;
   fecha: string;
+  organismo: Organismo;
+  numeroOrdenPago?: string | null;
+  estado: EstadoCompra;
   proveedor?: string | null;
-  tipoComprobante?: string | null;
-  numeroComprobante?: string | null;
-  numeroExpediente?: string | null;
+  proveedorId?: number | null;
+  proveedorDatos?: Proveedor | null;
   observaciones?: string | null;
   creadoPor?: { id: number; nombre: string; apellido: string } | null;
+  comprobantes: CompraComprobante[];
+  actasRecepcion: ActaRecepcion[];
   detalles: CompraDetalle[];
   createdAt?: string;
 }
@@ -254,6 +311,39 @@ export interface DashboardData {
     fecha: string;
     usuario?: { id: number; nombre: string; apellido: string } | null;
   }[];
+}
+
+export type AccionAuditoria =
+  | "CREAR"
+  | "ACTUALIZAR"
+  | "ELIMINAR"
+  | "LOGIN"
+  | "IMPRIMIR"
+  | "ANULAR";
+
+export interface AuditoriaItem {
+  id: number;
+  usuarioId?: number | null;
+  usuario?: {
+    id: number;
+    nombre: string;
+    apellido: string;
+    usuario: string;
+  } | null;
+  accion: AccionAuditoria;
+  entidad: string;
+  entidadId?: number | null;
+  ip?: string | null;
+  fecha: string;
+}
+
+export interface AuditoriaDetalle extends AuditoriaItem {
+  datosAnteriores?: unknown;
+  datosNuevos?: unknown;
+}
+
+export interface AuditoriaListado extends Paginado<AuditoriaItem> {
+  entidades: string[];
 }
 
 export interface Paginado<T> {

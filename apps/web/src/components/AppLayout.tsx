@@ -15,7 +15,7 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
+import { alpha, useTheme } from "@mui/material/styles";
 import MenuIcon from "@mui/icons-material/Menu";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
@@ -24,8 +24,10 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import HistoryIcon from "@mui/icons-material/History";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useAuth, puedeVer } from "../auth/AuthContext";
+import { ThemeToggle } from "./ThemeToggle";
 import type { Rol } from "../types";
 
 const drawerWidth = 264;
@@ -48,6 +50,12 @@ const navegacion: {
     icon: <ManageAccountsIcon />,
     roles: ["CONTABLE"],
   },
+  {
+    to: "/auditoria",
+    label: "Auditoría",
+    icon: <HistoryIcon />,
+    roles: ["CONTABLE"],
+  },
 ];
 
 export function AppLayout() {
@@ -57,6 +65,7 @@ export function AppLayout() {
   const { usuario, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const fondoBarra = alpha(theme.palette.background.paper, 0.92);
 
   const activo = (to: string) =>
     to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
@@ -99,8 +108,10 @@ export function AppLayout() {
                 borderRadius: 2,
                 mb: 0.5,
                 color: activo(item.to) ? "primary.main" : "text.secondary",
-                bgcolor: activo(item.to) ? "rgba(15, 76, 58, 0.08)" : "transparent",
-                "&:hover": { bgcolor: "rgba(15, 76, 58, 0.06)" },
+                bgcolor: activo(item.to)
+                  ? theme.palette.action.selected
+                  : "transparent",
+                "&:hover": { bgcolor: theme.palette.action.hover },
               }}
             >
               <ListItemIcon
@@ -158,8 +169,8 @@ export function AppLayout() {
         sx={{
           width: { md: `calc(100% - ${drawerWidth}px)` },
           ml: { md: `${drawerWidth}px` },
-          borderBottom: "1px solid rgba(15, 76, 58, 0.10)",
-          bgcolor: "rgba(255,255,255,0.92)",
+          borderBottom: `1px solid ${theme.palette.divider}`,
+          bgcolor: fondoBarra,
           backdropFilter: "blur(8px)",
         }}
       >
@@ -173,13 +184,15 @@ export function AppLayout() {
               <MenuIcon />
             </IconButton>
           )}
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
             Gestión patrimonial
           </Typography>
+          <ThemeToggle sx={{ mr: 1 }} />
           <Chip
             size="small"
             label={usuario?.rol === "CONTABLE" ? "Contable" : "Patrimonio"}
             color={usuario?.rol === "CONTABLE" ? "primary" : "default"}
+            sx={{ display: { xs: "none", sm: "inline-flex" } }}
           />
         </Toolbar>
       </AppBar>
@@ -195,7 +208,7 @@ export function AppLayout() {
           "& .MuiDrawer-paper": {
             width: drawerWidth,
             boxSizing: "border-box",
-            borderRight: "1px solid rgba(15, 76, 58, 0.10)",
+            borderRight: `1px solid ${theme.palette.divider}`,
           },
         }}
       >
@@ -206,6 +219,7 @@ export function AppLayout() {
         component="main"
         sx={{
           flexGrow: 1,
+          minWidth: 0,
           width: { md: `calc(100% - ${drawerWidth}px)` },
           p: { xs: 2, md: 3 },
           mt: { xs: 7, md: 8 },

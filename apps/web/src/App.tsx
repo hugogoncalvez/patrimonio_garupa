@@ -12,8 +12,10 @@ import { EntregaFormPage } from "./pages/EntregaFormPage";
 import { EntregaDetailPage } from "./pages/EntregaDetailPage";
 import { ComprasPage } from "./pages/ComprasPage";
 import { CompraFormPage } from "./pages/CompraFormPage";
+import { CompraDetailPage } from "./pages/CompraDetailPage";
 import { CatalogosPage } from "./pages/CatalogosPage";
 import { UsuariosPage } from "./pages/UsuariosPage";
+import { AuditoriaPage } from "./pages/AuditoriaPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 
 export function App() {
@@ -37,7 +39,15 @@ export function App() {
         <Route path="/entregas/nueva" element={<EntregaFormPage />} />
         <Route path="/entregas/:id" element={<EntregaDetailPage />} />
         <Route path="/compras" element={<ComprasPage />} />
-        <Route path="/compras/nueva" element={<CompraFormPage />} />
+        <Route
+          path="/compras/nueva"
+          element={
+            <RutaContable redirectTo="/compras">
+              <CompraFormPage />
+            </RutaContable>
+          }
+        />
+        <Route path="/compras/:id" element={<CompraDetailPage />} />
         <Route path="/configuracion" element={<CatalogosPage />} />
         <Route path="/catalogos" element={<CatalogosPage />} />
         <Route
@@ -45,6 +55,14 @@ export function App() {
           element={
             <RutaContable>
               <UsuariosPage />
+            </RutaContable>
+          }
+        />
+        <Route
+          path="/auditoria"
+          element={
+            <RutaContable>
+              <AuditoriaPage />
             </RutaContable>
           }
         />

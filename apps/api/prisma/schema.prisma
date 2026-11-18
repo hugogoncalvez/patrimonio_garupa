@@ -12,6 +12,22 @@ enum Rol {
   PATRIMONIO
 }
 
+enum Organismo {
+  DE
+  HCD
+}
+
+enum TipoCompraDetalle {
+  INVENTARIABLE
+  CONSUMIBLE
+}
+
+enum EstadoCompra {
+  REGISTRADA
+  RECIBIDA_PARCIAL
+  RECIBIDA
+}
+
 enum TipoIncorporacion {
   COMPRA
   DONACION
@@ -80,6 +96,7 @@ model Usuario {
   comprasCreadas       Compra[]              @relation("CompraCreadaPor")
   entregasCreadas      EntregaConsumible[]   @relation("EntregaCreadaPor")
   entregasAnuladas     EntregaConsumible[]   @relation("EntregaAnuladaPor")
+  actasRecepcion       ActaRecepcion[]
 }
 
 model Area {
@@ -125,13 +142,16 @@ model Persona {
 }
 
 model Rubro {
-  id            Int     @id @default(autoincrement())
-  nombre        String  @unique @db.VarChar(120)
-  codigoInterno String? @unique @db.VarChar(30)
-  codigoCuenta  String? @db.VarChar(30)
-  activo        Boolean @default(true)
+  id              Int     @id @default(autoincrement())
+  nombre          String  @unique @db.VarChar(120)
+  codigoInterno   String? @unique @db.VarChar(30)
+  codigoCuenta    String? @db.VarChar(30)
+  codigoCategoria Int?    @unique
+  activo          Boolean @default(true)
 
-  bienes Bien[]
+  bienes         Bien[]
+  compraDetalles CompraDetalle[]
+  contadoresBien ContadorBien[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -192,10 +212,15 @@ model Bien {
   creadoPorId Int?
   creadoPor   Usuario? @relation("BienCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
 
-  movimientosCustodia  MovimientoCustodia[]
-  movimientosUbicacion MovimientoUbicacion[]
-  documentos           Documento[]
-  compraDetalles       CompraDetalle[]
+  movimientosCustodia    MovimientoCustodia[]
+  movimientosUbicacion   MovimientoUbicacion[]
+  documentos             Documento[]
+  compraDetalleId        Int?
+  compraDetalle          CompraDetalle?        @relation(fields: [compraDetalleId], references: [id], onDelete: SetNull)
+  actaRecepcionId        Int?
+  actaRecepcion          ActaRecepcion?        @relation(fields: [actaRecepcionId], references: [id], onDelete: SetNull)
+  actaRecepcionDetalleId Int?
+  actaRecepcionDetalle   ActaRecepcionDetalle? @relation(fields: [actaRecepcionDetalleId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -204,6 +229,9 @@ model Bien {
   @@index([estadoId])
   @@index([areaId])
   @@index([subresponsableId])
+  @@index([compraDetalleId])
+  @@index([actaRecepcionId])
+  @@index([actaRecepcionDetalleId])
   @@index([activo])
 }
 
@@ -239,19 +267,39 @@ model Consumible {
   @@index([nombre])
 }
 
+model Proveedor {
+  id        Int      @id @default(autoincrement())
+  nombre    String   @unique @db.VarChar(150)
+  cuit      String?  @db.VarChar(20)
+  telefono  String?  @db.VarChar(50)
+  email     String?  @db.VarChar(120)
+  direccion String?  @db.VarChar(200)
+  activo    Boolean  @default(true)
+  compras   Compra[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([activo])
+}
+
 model Compra {
-  id                Int      @id @default(autoincrement())
-  fecha             DateTime @db.Date
-  proveedor         String?  @db.VarChar(150)
-  tipoComprobante   String?  @db.VarChar(50)
-  numeroComprobante String?  @db.VarChar(50)
-  numeroExpediente  String?  @db.VarChar(50)
-  observaciones     String?  @db.Text
+  id               Int          @id @default(autoincrement())
+  fecha            DateTime     @db.Date
+  organismo        Organismo    @default(DE)
+  numeroOrdenPago  String?      @db.VarChar(40)
+  estado           EstadoCompra @default(REGISTRADA)
+  proveedor        String?      @db.VarChar(150)
+  proveedorId      Int?
+  proveedorDatos   Proveedor?   @relation(fields: [proveedorId], references: [id], onDelete: SetNull)
+  observaciones    String?      @db.Text
 
   creadoPorId Int?
   creadoPor   Usuario? @relation("CompraCreadaPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
 
   detalles         CompraDetalle[]
+  comprobantes     CompraComprobante[]
+  actasRecepcion   ActaRecepcion[]
   documentos       Documento[]
   movimientosStock MovimientoStock[]
 
@@ -259,24 +307,98 @@ model Compra {
   updatedAt DateTime @updatedAt
 
   @@index([fecha])
+  @@index([organismo])
+  @@index([estado])
+  @@index([proveedorId])
+  @@index([numeroOrdenPago])
+}
+
+model CompraComprobante {
+  id       Int       @id @default(autoincrement())
+  compraId Int
+  compra   Compra    @relation(fields: [compraId], references: [id], onDelete: Cascade)
+  tipo     String    @db.VarChar(50)
+  numero   String?   @db.VarChar(60)
+  fecha    DateTime? @db.Date
+
+  createdAt DateTime @default(now())
+
+  @@index([compraId])
 }
 
 model CompraDetalle {
-  id             Int         @id @default(autoincrement())
-  compraId       Int
-  compra         Compra      @relation(fields: [compraId], references: [id], onDelete: Cascade)
-  bienId         Int?
-  bien           Bien?       @relation(fields: [bienId], references: [id], onDelete: SetNull)
-  consumibleId   Int?
-  consumible     Consumible? @relation(fields: [consumibleId], references: [id], onDelete: SetNull)
-  cantidad       Decimal     @default(1) @db.Decimal(14, 3)
-  precioUnitario Decimal?    @db.Decimal(14, 2)
-  descripcion    String?     @db.VarChar(250)
-  createdAt      DateTime    @default(now())
+  id               Int               @id @default(autoincrement())
+  compraId         Int
+  compra           Compra            @relation(fields: [compraId], references: [id], onDelete: Cascade)
+  tipo             TipoCompraDetalle @default(CONSUMIBLE)
+  rubroId          Int?
+  rubro            Rubro?            @relation(fields: [rubroId], references: [id], onDelete: SetNull)
+  consumibleId     Int?
+  consumible       Consumible?       @relation(fields: [consumibleId], references: [id], onDelete: SetNull)
+  cantidad         Decimal           @default(1) @db.Decimal(14, 3)
+  cantidadRecibida Decimal           @default(0) @db.Decimal(14, 3)
+  precioUnitario   Decimal?          @db.Decimal(14, 2)
+  descripcion      String?           @db.VarChar(250)
+  createdAt        DateTime          @default(now())
+
+  bienes       Bien[]
+  actaDetalles ActaRecepcionDetalle[]
 
   @@index([compraId])
-  @@index([bienId])
+  @@index([rubroId])
   @@index([consumibleId])
+}
+
+model ContadorBien {
+  organismo    Organismo
+  rubroId      Int
+  rubro        Rubro     @relation(fields: [rubroId], references: [id], onDelete: Cascade)
+  ultimoNumero Int       @default(0)
+  updatedAt    DateTime  @updatedAt
+
+  @@id([organismo, rubroId])
+}
+
+model ContadorActaRecepcion {
+  ejercicio    Int      @id
+  ultimoNumero Int      @default(0)
+  updatedAt    DateTime @updatedAt
+}
+
+model ActaRecepcion {
+  id            Int       @id @default(autoincrement())
+  numero        String    @unique @db.VarChar(30)
+  fecha         DateTime  @db.Date
+  organismo     Organismo
+  compraId      Int
+  compra        Compra    @relation(fields: [compraId], references: [id], onDelete: Restrict)
+  usuarioId     Int?
+  usuario       Usuario?  @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  observaciones String?   @db.Text
+
+  detalles ActaRecepcionDetalle[]
+  bienes   Bien[]
+
+  createdAt DateTime @default(now())
+
+  @@index([fecha])
+  @@index([compraId])
+}
+
+model ActaRecepcionDetalle {
+  id              Int           @id @default(autoincrement())
+  actaRecepcionId Int
+  actaRecepcion   ActaRecepcion @relation(fields: [actaRecepcionId], references: [id], onDelete: Cascade)
+  compraDetalleId Int
+  compraDetalle   CompraDetalle @relation(fields: [compraDetalleId], references: [id], onDelete: Restrict)
+  cantidad        Decimal       @db.Decimal(14, 3)
+
+  bienes Bien[]
+
+  createdAt DateTime @default(now())
+
+  @@index([actaRecepcionId])
+  @@index([compraDetalleId])
 }
 
 model MovimientoStock {

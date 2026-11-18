@@ -27,7 +27,12 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../lib/api";
 import { ErrorCarga } from "../components/ErrorCarga";
 import { alertaError, alertaExito } from "../lib/errors";
-import { formatoFecha, formatoFechaHora, formatoNumero } from "../lib/format";
+import {
+  formatoFecha,
+  formatoFechaHora,
+  formatoNumero,
+  formatoRegistrante,
+} from "../lib/format";
 import { useAuth } from "../auth/AuthContext";
 import type { EntregaConsumible } from "../types";
 
@@ -243,7 +248,10 @@ export function EntregaDetailPage() {
             <Dato etiqueta="DNI" valor={entrega.firmanteDni} />
             <Dato
               etiqueta="Registrado por"
-              valor={entrega.usuarioNombreSnapshot ?? "-"}
+              valor={formatoRegistrante(
+                entrega.usuarioNombreSnapshot,
+                entrega.usuario,
+              )}
             />
             <Dato
               etiqueta="Fecha de registro"

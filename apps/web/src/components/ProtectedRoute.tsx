@@ -28,11 +28,17 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
-export function RutaContable({ children }: { children: ReactNode }) {
+export function RutaContable({
+  children,
+  redirectTo = "/",
+}: {
+  children: ReactNode;
+  redirectTo?: string;
+}) {
   const { usuario } = useAuth();
 
   if (usuario?.rol !== "CONTABLE") {
-    return <Navigate to="/" replace />;
+    return <Navigate to={redirectTo} replace />;
   }
 
   return <>{children}</>;

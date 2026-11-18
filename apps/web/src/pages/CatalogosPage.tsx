@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Box,
@@ -29,6 +29,7 @@ import {
   Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import { api } from "../lib/api";
@@ -68,6 +69,7 @@ function RubrosTab() {
     nombre: "",
     codigoInterno: "",
     codigoCuenta: "",
+    codigoCategoria: "",
     activo: true,
   });
 
@@ -82,6 +84,9 @@ function RubrosTab() {
         nombre: form.nombre.trim(),
         codigoInterno: form.codigoInterno.trim() || null,
         codigoCuenta: form.codigoCuenta.trim() || null,
+        codigoCategoria: form.codigoCategoria
+          ? Number(form.codigoCategoria)
+          : null,
         activo: form.activo,
       };
       return editando
@@ -109,7 +114,13 @@ function RubrosTab() {
 
   const abrirNuevo = () => {
     setEditando(null);
-    setForm({ nombre: "", codigoInterno: "", codigoCuenta: "", activo: true });
+    setForm({
+      nombre: "",
+      codigoInterno: "",
+      codigoCuenta: "",
+      codigoCategoria: "",
+      activo: true,
+    });
     setDialogo(true);
   };
 
@@ -119,6 +130,9 @@ function RubrosTab() {
       nombre: rubro.nombre,
       codigoInterno: rubro.codigoInterno ?? "",
       codigoCuenta: rubro.codigoCuenta ?? "",
+      codigoCategoria: rubro.codigoCategoria
+        ? String(rubro.codigoCategoria)
+        : "",
       activo: rubro.activo,
     });
     setDialogo(true);
@@ -134,6 +148,7 @@ function RubrosTab() {
           <TableHead>
             <TableRow>
               <TableCell>Nombre</TableCell>
+              <TableCell>Categoría</TableCell>
               <TableCell>Código interno</TableCell>
               <TableCell>Código contable</TableCell>
               <TableCell align="right">Bienes</TableCell>
@@ -144,7 +159,7 @@ function RubrosTab() {
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 5 }}>
+                <TableCell colSpan={7} align="center" sx={{ py: 5 }}>
                   <CircularProgress size={26} />
                 </TableCell>
               </TableRow>
@@ -152,7 +167,7 @@ function RubrosTab() {
 
             {error && (
               <TableRow>
-                <TableCell colSpan={6} sx={{ py: 2 }}>
+                <TableCell colSpan={7} sx={{ py: 2 }}>
                   <ErrorCarga
                     error={error}
                     onRetry={() => void refetch()}
@@ -164,6 +179,7 @@ function RubrosTab() {
             {data?.map((rubro) => (
               <TableRow key={rubro.id} hover>
                 <TableCell>{rubro.nombre}</TableCell>
+                <TableCell>{rubro.codigoCategoria ?? "-"}</TableCell>
                 <TableCell>{rubro.codigoInterno ?? "-"}</TableCell>
                 <TableCell>{rubro.codigoCuenta ?? "-"}</TableCell>
                 <TableCell align="right">{rubro._count?.bienes ?? 0}</TableCell>
@@ -206,6 +222,16 @@ function RubrosTab() {
               value={form.nombre}
               onChange={(event) => setForm({ ...form, nombre: event.target.value })}
               required
+            />
+            <TextField
+              label="Categoría"
+              type="number"
+              value={form.codigoCategoria}
+              onChange={(event) =>
+                setForm({ ...form, codigoCategoria: event.target.value })
+              }
+              helperText="Número de 1 a 7. Se usa en el código del bien."
+              slotProps={{ htmlInput: { min: 1, max: 7 } }}
             />
             <TextField
               label="Código interno"
@@ -1107,7 +1133,9 @@ function PersonasTab() {
 }
 
 export function CatalogosPage() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const volverAConsumibles = searchParams.get("volver") === "consumibles";
   const [tab, setTab] = useState(() => {
     const valor = Number(searchParams.get("tab"));
     return Number.isInteger(valor) && valor >= 0 && valor <= 4 ? valor : 0;
@@ -1115,6 +1143,17 @@ export function CatalogosPage() {
 
   return (
     <Stack spacing={2.5}>
+      {volverAConsumibles && (
+        <Box>
+          <Button
+            startIcon={<ArrowBackIcon />}
+            onClick={() => navigate("/consumibles")}
+          >
+            Volver
+          </Button>
+        </Box>
+      )}
+
       <Box>
         <Typography variant="h4">Configuración</Typography>
         <Typography color="text.secondary">

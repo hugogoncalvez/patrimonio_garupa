@@ -316,15 +316,13 @@ export function BienDetailPage() {
 
               {tab === 2 && (
                 <List dense>
-                  {bien.compraDetalles?.length ? (
-                    bien.compraDetalles.map((detalle) => (
-                      <ListItem key={detalle.id} disableGutters>
-                        <ListItemText
-                          primary={`Compra #${detalle.compra?.id} · ${detalle.compra?.proveedor ?? "Sin proveedor"}`}
-                          secondary={`${formatoFecha(detalle.compra?.fecha)} · ${formatoMoneda(detalle.precioUnitario)}`}
-                        />
-                      </ListItem>
-                    ))
+                  {bien.compraDetalle ? (
+                    <ListItem disableGutters>
+                      <ListItemText
+                        primary={`Compra #${bien.compraDetalle.compra?.id} · ${bien.compraDetalle.compra?.proveedor ?? "Sin proveedor"}`}
+                        secondary={`${formatoFecha(bien.compraDetalle.compra?.fecha)} · ${formatoMoneda(bien.compraDetalle.precioUnitario)}${bien.actaRecepcion ? ` · Acta ${bien.actaRecepcion.numero}` : ""}`}
+                      />
+                    </ListItem>
                   ) : (
                     <Typography variant="body2" color="text.secondary">
                       Sin compras asociadas.

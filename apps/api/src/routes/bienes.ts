@@ -190,17 +190,23 @@ bienesRouter.get("/:id", async (req, res) => {
         },
       },
       documentos: { orderBy: { createdAt: "desc" } },
-      compraDetalles: {
+      compraDetalle: {
         include: {
           compra: {
             select: {
               id: true,
               fecha: true,
               proveedor: true,
-              numeroComprobante: true,
+              numeroOrdenPago: true,
+              comprobantes: {
+                select: { id: true, tipo: true, numero: true, fecha: true },
+              },
             },
           },
         },
+      },
+      actaRecepcion: {
+        select: { id: true, numero: true, fecha: true },
       },
     },
   });

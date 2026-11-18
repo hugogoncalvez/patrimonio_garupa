@@ -5,6 +5,7 @@ import {
   Box,
   Button,
   Card,
+  Chip,
   CircularProgress,
   InputAdornment,
   Stack,
@@ -20,6 +21,7 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
+import { useAuth } from "../auth/AuthContext";
 import { api } from "../lib/api";
 import { ErrorCarga } from "../components/ErrorCarga";
 import { formatoFecha, formatoMoneda } from "../lib/format";
@@ -33,8 +35,18 @@ function totalCompra(compra: Compra) {
   );
 }
 
+const estados: Record<
+  Compra["estado"],
+  { label: string; color: "default" | "warning" | "success" }
+> = {
+  REGISTRADA: { label: "Pendiente de recepción", color: "warning" },
+  RECIBIDA_PARCIAL: { label: "Recepción parcial", color: "warning" },
+  RECIBIDA: { label: "Recibida", color: "success" },
+};
+
 export function ComprasPage() {
   const navigate = useNavigate();
+  const { usuario } = useAuth();
   const [q, setQ] = useState("");
   const [page, setPage] = useState(0);
 
@@ -48,6 +60,7 @@ export function ComprasPage() {
       if (q.trim()) params.q = q.trim();
       return (await api.get("/compras", { params })).data;
     },
+    refetchOnMount: "always",
   });
 
   return (
@@ -64,22 +77,24 @@ export function ComprasPage() {
         <Box>
           <Typography variant="h4">Compras e ingresos</Typography>
           <Typography color="text.secondary">
-            Registro simple de compras y asociación con bienes o consumibles.
+            Compras, órdenes de pago y recepciones de bienes y consumibles.
           </Typography>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => navigate("/compras/nueva")}
-        >
-          Nueva compra
-        </Button>
+        {usuario?.rol === "CONTABLE" && (
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => navigate("/compras/nueva")}
+          >
+            Nueva compra
+          </Button>
+        )}
       </Box>
 
       <Card sx={{ p: 2 }}>
         <TextField
           size="small"
-          placeholder="Buscar por proveedor o comprobante..."
+          placeholder="Buscar por OP, proveedor o comprobante..."
           value={q}
           onChange={(event) => {
             setQ(event.target.value);
@@ -104,17 +119,20 @@ export function ComprasPage() {
             <TableHead>
               <TableRow>
                 <TableCell>Fecha</TableCell>
+                <TableCell>OP</TableCell>
+                <TableCell>Organismo</TableCell>
                 <TableCell>Proveedor</TableCell>
-                <TableCell>Comprobante</TableCell>
+                <TableCell>Comprobantes</TableCell>
                 <TableCell align="right">Ítems</TableCell>
                 <TableCell align="right">Total</TableCell>
-                <TableCell>Registró</TableCell>
+                <TableCell>Estado</TableCell>
+                <TableCell align="right">Acciones</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
+                  <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
                     <CircularProgress size={28} />
                   </TableCell>
                 </TableRow>
@@ -122,7 +140,7 @@ export function ComprasPage() {
 
               {error && (
                 <TableRow>
-                  <TableCell colSpan={6} sx={{ py: 2 }}>
+                  <TableCell colSpan={9} sx={{ py: 2 }}>
                     <ErrorCarga
                       error={error}
                       onRetry={() => void refetch()}
@@ -134,7 +152,7 @@ export function ComprasPage() {
 
               {!isLoading && !error && data?.items.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
+                  <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
                     <Typography color="text.secondary">
                       No hay compras registradas.
                     </Typography>
@@ -143,22 +161,49 @@ export function ComprasPage() {
               )}
 
               {data?.items.map((compra) => (
-                <TableRow key={compra.id} hover>
+                <TableRow
+                  key={compra.id}
+                  hover
+                  sx={{ cursor: "pointer" }}
+                  onClick={() => navigate(`/compras/${compra.id}`)}
+                >
                   <TableCell>{formatoFecha(compra.fecha)}</TableCell>
-                  <TableCell>{compra.proveedor ?? "-"}</TableCell>
+                  <TableCell>{compra.numeroOrdenPago ?? "-"}</TableCell>
+                  <TableCell>{compra.organismo}</TableCell>
                   <TableCell>
-                    {compra.tipoComprobante
-                      ? `${compra.tipoComprobante} ${compra.numeroComprobante ?? ""}`
-                      : compra.numeroComprobante ?? "-"}
+                    {compra.proveedorDatos?.nombre ?? compra.proveedor ?? "-"}
+                  </TableCell>
+                  <TableCell>
+                    {compra.comprobantes.length === 0
+                      ? "-"
+                      : compra.comprobantes
+                          .map(
+                            (item) =>
+                              `${item.tipo}${item.numero ? ` ${item.numero}` : ""}`,
+                          )
+                          .join(", ")}
                   </TableCell>
                   <TableCell align="right">{compra.detalles.length}</TableCell>
                   <TableCell align="right">
                     {formatoMoneda(totalCompra(compra))}
                   </TableCell>
                   <TableCell>
-                    {compra.creadoPor
-                      ? `${compra.creadoPor.nombre} ${compra.creadoPor.apellido}`
-                      : "-"}
+                    <Chip
+                      size="small"
+                      label={estados[compra.estado].label}
+                      color={estados[compra.estado].color}
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    <Button
+                      size="small"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        navigate(`/compras/${compra.id}`);
+                      }}
+                    >
+                      {compra.estado === "RECIBIDA" ? "Ver" : "Recibir"}
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

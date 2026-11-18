@@ -15,10 +15,13 @@ import {
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import { useTheme } from "@mui/material/styles";
 import { useAuth } from "../auth/AuthContext";
+import { ThemeToggle } from "../components/ThemeToggle";
 import { mensajeError } from "../lib/errors";
 
 export function LoginPage() {
+  const theme = useTheme();
   const { usuario, login } = useAuth();
   const navigate = useNavigate();
   const [nombreUsuario, setNombreUsuario] = useState("");
@@ -55,9 +58,21 @@ export function LoginPage() {
         justifyContent: "center",
         p: 2,
         background:
-          "radial-gradient(circle at top left, #dcebe4 0%, #f4f6f5 45%, #eef1ef 100%)",
+          theme.palette.mode === "dark"
+            ? "radial-gradient(circle at top left, #173126 0%, #0b1210 45%, #101a15 100%)"
+            : "radial-gradient(circle at top left, #dcebe4 0%, #f4f6f5 45%, #eef1ef 100%)",
       }}
     >
+      <ThemeToggle
+        sx={{
+          position: "fixed",
+          top: 16,
+          right: 16,
+          bgcolor: theme.palette.background.paper,
+          border: `1px solid ${theme.palette.divider}`,
+          boxShadow: 1,
+        }}
+      />
       <Card sx={{ width: "100%", maxWidth: 430 }}>
         <CardContent sx={{ p: { xs: 3, sm: 4.5 } }}>
           <Stack spacing={1} sx={{ alignItems: "center", mb: 3 }}>

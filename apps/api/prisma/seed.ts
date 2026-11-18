@@ -3,11 +3,47 @@ import bcrypt from "bcryptjs";
 import { prisma } from "../src/lib/prisma.js";
 
 const rubros = [
-  { nombre: "Maquinarias y Equipos", codigoInterno: "MAQ", codigoCuenta: "5021001" },
-  { nombre: "Muebles y Equipos de Oficina", codigoInterno: "MUE", codigoCuenta: "5021002" },
-  { nombre: "Medios de Transporte", codigoInterno: "TRA", codigoCuenta: "5021005" },
-  { nombre: "Edificios y Obras", codigoInterno: "EDI", codigoCuenta: "5021008" },
-  { nombre: "Herramientas", codigoInterno: "HER", codigoCuenta: "5021009" },
+  {
+    nombre: "INMUEBLES",
+    codigoInterno: "INM",
+    codigoCuenta: "5021008",
+    codigoCategoria: 1,
+  },
+  {
+    nombre: "MUEBLES Y UTILES",
+    codigoInterno: "MUE",
+    codigoCuenta: "5021002",
+    codigoCategoria: 2,
+  },
+  {
+    nombre: "MAQUINAS MOTORES AP Y HERRAMIENTAS",
+    codigoInterno: "MAQ",
+    codigoCuenta: "5021001",
+    codigoCategoria: 3,
+  },
+  {
+    nombre: "MEDIOS DE TRANSPORTE",
+    codigoInterno: "TRA",
+    codigoCuenta: "5021005",
+    codigoCategoria: 4,
+  },
+  {
+    nombre: "MAQUINAS VIALES",
+    codigoInterno: "MVI",
+    codigoCuenta: "5021009",
+    codigoCategoria: 5,
+  },
+  {
+    nombre: "BIBLIOTECAS COLECC. Y AFINES",
+    codigoInterno: "BIB",
+    codigoCategoria: 6,
+  },
+  {
+    nombre: "OTROS BIENES",
+    codigoInterno: "OTR",
+    codigoCuenta: "5021010",
+    codigoCategoria: 7,
+  },
 ];
 
 const estados = [
@@ -49,8 +85,9 @@ async function main() {
 
   for (const rubro of rubros) {
     await prisma.rubro.upsert({
-      where: { nombre: rubro.nombre },
+      where: { codigoCategoria: rubro.codigoCategoria },
       update: {
+        nombre: rubro.nombre,
         codigoInterno: rubro.codigoInterno,
         codigoCuenta: rubro.codigoCuenta,
       },

@@ -135,7 +135,7 @@ entregasConsumiblesRouter.post("/", async (req, res) => {
     observaciones: data.observaciones,
     items: data.items,
     usuarioId: req.usuario!.id,
-    usuarioNombre: `${req.usuario!.nombre} ${req.usuario!.apellido}`.trim(),
+    usuarioNombre: `${req.usuario!.apellido}, ${req.usuario!.nombre}.`,
     ip: req.ip,
   });
 
