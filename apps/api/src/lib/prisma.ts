@@ -18,6 +18,10 @@ if (sslSinVerificar) {
 const adapter = new PrismaPg({
   connectionString: url.toString(),
   ssl: sslSinVerificar ? { rejectUnauthorized: false } : undefined,
+  max: 1,
+  idleTimeoutMillis: 10_000,
+  connectionTimeoutMillis: 10_000,
+  allowExitOnIdle: true,
 });
 
 export const prisma = new PrismaClient({ adapter });
