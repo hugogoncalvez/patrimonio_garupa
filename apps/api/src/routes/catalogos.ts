@@ -4,11 +4,18 @@ import { prisma } from "../lib/prisma.js";
 import { HttpError } from "../lib/http.js";
 import { registrarAuditoria } from "../lib/audit.js";
 import { idOpcional, idParam, textoOpcional } from "../lib/zod.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, requireRole } from "../middleware/auth.js";
 
 export const catalogosRouter = Router();
 
 catalogosRouter.use(requireAuth);
+catalogosRouter.use((req, res, next) => {
+  if (req.method === "GET" || req.method === "HEAD") {
+    next();
+    return;
+  }
+  requireRole("CONTABLE")(req, res, next);
+});
 
 const codigoCategoriaOpcional = z.preprocess(
   (value) => (value === "" || value === null || value === undefined ? null : value),

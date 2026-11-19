@@ -8,6 +8,8 @@ import {
   Chip,
   CircularProgress,
   InputAdornment,
+  MenuItem,
+  Select,
   Stack,
   Table,
   TableBody,
@@ -21,11 +23,10 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
-import { useAuth } from "../auth/AuthContext";
 import { api } from "../lib/api";
 import { ErrorCarga } from "../components/ErrorCarga";
 import { formatoFecha, formatoMoneda } from "../lib/format";
-import type { Compra, Paginado } from "../types";
+import type { Area, Compra, Paginado } from "../types";
 
 function totalCompra(compra: Compra) {
   return compra.detalles.reduce(
@@ -46,18 +47,28 @@ const estados: Record<
 
 export function ComprasPage() {
   const navigate = useNavigate();
-  const { usuario } = useAuth();
   const [q, setQ] = useState("");
+  const [organismo, setOrganismo] = useState("");
+  const [estado, setEstado] = useState("");
+  const [areaId, setAreaId] = useState("");
   const [page, setPage] = useState(0);
 
+  const { data: areas } = useQuery<Area[]>({
+    queryKey: ["areas"],
+    queryFn: async () => (await api.get("/catalogos/areas")).data,
+  });
+
   const { data, isLoading, error, refetch } = useQuery<Paginado<Compra>>({
-    queryKey: ["compras", q, page],
+    queryKey: ["compras", q, organismo, estado, areaId, page],
     queryFn: async () => {
       const params: Record<string, string | number> = {
         page: page + 1,
         limit: 20,
       };
       if (q.trim()) params.q = q.trim();
+      if (organismo) params.organismo = organismo;
+      if (estado) params.estado = estado;
+      if (areaId) params.areaId = areaId;
       return (await api.get("/compras", { params })).data;
     },
     refetchOnMount: "always",
@@ -80,37 +91,88 @@ export function ComprasPage() {
             Compras, órdenes de pago y recepciones de bienes y consumibles.
           </Typography>
         </Box>
-        {usuario?.rol === "CONTABLE" && (
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => navigate("/compras/nueva")}
-          >
-            Nueva compra
-          </Button>
-        )}
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => navigate("/compras/nueva")}
+        >
+          Nueva compra
+        </Button>
       </Box>
 
       <Card sx={{ p: 2 }}>
-        <TextField
-          size="small"
-          placeholder="Buscar por OP, proveedor o comprobante..."
-          value={q}
-          onChange={(event) => {
-            setQ(event.target.value);
-            setPage(0);
-          }}
-          fullWidth
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
-                </InputAdornment>
-              ),
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              md: "minmax(240px, 1fr) repeat(3, minmax(160px, 1fr))",
             },
+            gap: 2,
           }}
-        />
+        >
+          <TextField
+            size="small"
+            placeholder="Buscar por OP, proveedor o comprobante..."
+            value={q}
+            onChange={(event) => {
+              setQ(event.target.value);
+              setPage(0);
+            }}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
+          <Select
+            size="small"
+            displayEmpty
+            value={organismo}
+            onChange={(event) => {
+              setOrganismo(event.target.value);
+              setPage(0);
+            }}
+          >
+            <MenuItem value="">Todos los organismos</MenuItem>
+            <MenuItem value="DE">Departamento Ejecutivo</MenuItem>
+            <MenuItem value="HCD">Honorable Concejo Deliberante</MenuItem>
+          </Select>
+          <Select
+            size="small"
+            displayEmpty
+            value={estado}
+            onChange={(event) => {
+              setEstado(event.target.value);
+              setPage(0);
+            }}
+          >
+            <MenuItem value="">Todos los estados</MenuItem>
+            <MenuItem value="REGISTRADA">Pendiente</MenuItem>
+            <MenuItem value="RECIBIDA_PARCIAL">Recepción parcial</MenuItem>
+            <MenuItem value="RECIBIDA">Recibida</MenuItem>
+          </Select>
+          <Select
+            size="small"
+            displayEmpty
+            value={areaId}
+            onChange={(event) => {
+              setAreaId(event.target.value);
+              setPage(0);
+            }}
+          >
+            <MenuItem value="">Todas las áreas</MenuItem>
+            {(areas ?? []).map((area) => (
+              <MenuItem key={area.id} value={String(area.id)}>
+                {area.nombre}
+              </MenuItem>
+            ))}
+          </Select>
+        </Box>
       </Card>
 
       <Card>
@@ -121,6 +183,7 @@ export function ComprasPage() {
                 <TableCell>Fecha</TableCell>
                 <TableCell>OP</TableCell>
                 <TableCell>Organismo</TableCell>
+                <TableCell>Área destino</TableCell>
                 <TableCell>Proveedor</TableCell>
                 <TableCell>Comprobantes</TableCell>
                 <TableCell align="right">Ítems</TableCell>
@@ -132,7 +195,7 @@ export function ComprasPage() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
+                  <TableCell colSpan={10} align="center" sx={{ py: 6 }}>
                     <CircularProgress size={28} />
                   </TableCell>
                 </TableRow>
@@ -140,7 +203,7 @@ export function ComprasPage() {
 
               {error && (
                 <TableRow>
-                  <TableCell colSpan={9} sx={{ py: 2 }}>
+                  <TableCell colSpan={10} sx={{ py: 2 }}>
                     <ErrorCarga
                       error={error}
                       onRetry={() => void refetch()}
@@ -152,7 +215,7 @@ export function ComprasPage() {
 
               {!isLoading && !error && data?.items.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
+                  <TableCell colSpan={10} align="center" sx={{ py: 6 }}>
                     <Typography color="text.secondary">
                       No hay compras registradas.
                     </Typography>
@@ -170,6 +233,7 @@ export function ComprasPage() {
                   <TableCell>{formatoFecha(compra.fecha)}</TableCell>
                   <TableCell>{compra.numeroOrdenPago ?? "-"}</TableCell>
                   <TableCell>{compra.organismo}</TableCell>
+                  <TableCell>{compra.areaDestino?.nombre ?? "-"}</TableCell>
                   <TableCell>
                     {compra.proveedorDatos?.nombre ?? compra.proveedor ?? "-"}
                   </TableCell>

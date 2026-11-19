@@ -19,6 +19,9 @@ import Inventory2Icon from "@mui/icons-material/Inventory2";
 import WarehouseIcon from "@mui/icons-material/Warehouse";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import PersonOffIcon from "@mui/icons-material/PersonOff";
+import PlaceIcon from "@mui/icons-material/Place";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@mui/material/styles";
 import { api } from "../lib/api";
@@ -104,6 +107,7 @@ export function DashboardPage() {
   }
 
   const maxRubro = Math.max(1, ...data.bienesPorRubro.map((item) => item.cantidad));
+  const maxArea = Math.max(1, ...data.bienesPorArea.map((item) => item.cantidad));
 
   return (
     <Stack spacing={3}>
@@ -136,6 +140,9 @@ export function DashboardPage() {
           </Box>
         </Stack>
         <Stack direction="row" spacing={1}>
+          <Button variant="outlined" onClick={() => navigate("/reportes")}>
+            Reportes
+          </Button>
           <Button variant="outlined" onClick={() => navigate("/consumibles")}>
             Consumibles
           </Button>
@@ -180,12 +187,33 @@ export function DashboardPage() {
           icono={<ShoppingCartIcon />}
           color={theme.palette.mode === "dark" ? "#ce93d8" : "#6a1b9a"}
         />
+        <StatCard
+          titulo="Sin responsable"
+          valor={data.bienes.sinResponsable}
+          detalle="Bienes activos sin responsable directo ni de área"
+          icono={<PersonOffIcon />}
+          color={theme.palette.error.main}
+        />
+        <StatCard
+          titulo="Sin ubicación"
+          valor={data.bienes.sinUbicacion}
+          detalle="Bienes activos sin área asignada"
+          icono={<PlaceIcon />}
+          color={theme.palette.warning.main}
+        />
+        <StatCard
+          titulo="Áreas con bienes"
+          valor={data.bienesPorArea.filter((item) => item.areaId !== null).length}
+          detalle="Áreas con bienes activos"
+          icono={<AccountTreeIcon />}
+          color={theme.palette.info.main}
+        />
       </Box>
 
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: { xs: "1fr", lg: "1.2fr 1fr" },
+          gridTemplateColumns: { xs: "1fr", lg: "repeat(3, 1fr)" },
           gap: 2,
         }}
       >
@@ -220,6 +248,47 @@ export function DashboardPage() {
                 ))}
               </Stack>
             )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Bienes por área
+            </Typography>
+            {data.bienesPorArea.length === 0 ? (
+              <Typography color="text.secondary" variant="body2">
+                Todavía no hay bienes activos.
+              </Typography>
+            ) : (
+              <Stack spacing={1.4} sx={{ mt: 1 }}>
+                {data.bienesPorArea.map((item) => (
+                  <Box key={item.areaId ?? "sin-area"}>
+                    <Stack
+                      direction="row"
+                      sx={{ justifyContent: "space-between", mb: 0.5 }}
+                    >
+                      <Typography variant="body2">{item.nombre}</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                        {item.cantidad}
+                      </Typography>
+                    </Stack>
+                    <LinearProgress
+                      variant="determinate"
+                      value={(item.cantidad / maxArea) * 100}
+                      sx={{ height: 8, borderRadius: 4 }}
+                    />
+                  </Box>
+                ))}
+              </Stack>
+            )}
+            <Button
+              size="small"
+              sx={{ mt: 1 }}
+              onClick={() => navigate("/reportes")}
+            >
+              Ver reportes
+            </Button>
           </CardContent>
         </Card>
 

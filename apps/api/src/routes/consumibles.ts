@@ -175,6 +175,7 @@ consumiblesRouter.get("/:id", async (req, res) => {
         include: {
           areaDestino: { select: { id: true, nombre: true } },
           compra: { select: { id: true, fecha: true, proveedor: true } },
+          entrega: { select: { id: true, numero: true } },
           usuario: { select: { id: true, nombre: true, apellido: true } },
         },
       },

@@ -14,7 +14,9 @@ import { comprasRouter } from "./routes/compras.js";
 import { documentosRouter } from "./routes/documentos.js";
 import { entregasConsumiblesRouter } from "./routes/entregas-consumibles.js";
 import { dashboardRouter } from "./routes/dashboard.js";
+import { reportesRouter } from "./routes/reportes.js";
 import { auditoriaRouter } from "./routes/auditoria.js";
+import { preferenciasRouter } from "./routes/preferencias.js";
 import { errorHandler, notFound } from "./middleware/error.js";
 
 z.config(z.locales.es());
@@ -51,7 +53,9 @@ app.use("/api/compras", comprasRouter);
 app.use("/api/documentos", documentosRouter);
 app.use("/api/entregas-consumibles", entregasConsumiblesRouter);
 app.use("/api/dashboard", dashboardRouter);
+app.use("/api/reportes", reportesRouter);
 app.use("/api/auditoria", auditoriaRouter);
+app.use("/api/preferencias", preferenciasRouter);
 
 app.use(notFound);
 app.use(errorHandler);

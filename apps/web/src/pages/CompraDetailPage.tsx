@@ -247,6 +247,7 @@ export function CompraDetailPage() {
               ? "Departamento Ejecutivo"
               : "Honorable Concejo Deliberante"}{" "}
             · {formatoFecha(compra.fecha)} ·{" "}
+            {compra.areaDestino ? `${compra.areaDestino.nombre} · ` : ""}
             {compra.proveedorDatos?.nombre ?? compra.proveedor ?? "Sin proveedor"}
           </Typography>
         </Box>
@@ -476,6 +477,14 @@ export function CompraDetailPage() {
                   </Typography>
                   <Typography variant="body2">
                     {compra.numeroOrdenPago ?? "-"}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Área destino
+                  </Typography>
+                  <Typography variant="body2">
+                    {compra.areaDestino?.nombre ?? "-"}
                   </Typography>
                 </Box>
                 <Box>

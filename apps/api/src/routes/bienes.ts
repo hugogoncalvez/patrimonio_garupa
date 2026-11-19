@@ -19,7 +19,13 @@ bienesRouter.use(requireAuth);
 const bienInclude = {
   rubro: { select: { id: true, nombre: true, codigoCuenta: true } },
   estado: { select: { id: true, nombre: true } },
-  area: { select: { id: true, nombre: true } },
+  area: {
+    select: {
+      id: true,
+      nombre: true,
+      responsable: { select: { id: true, nombre: true, apellido: true } },
+    },
+  },
   subresponsable: { select: { id: true, nombre: true, apellido: true } },
 } as const;
 
@@ -33,11 +39,6 @@ const usuarioMini = {
 
 const bienSchema = z.object({
   codigoInventario: z.string().trim().min(1, "El código es obligatorio").max(40),
-  numeroIdentificacion: z
-    .string()
-    .trim()
-    .min(1, "El número de identificación es obligatorio")
-    .max(40),
   descripcion: z.string().trim().min(1, "La descripción es obligatoria").max(300),
   marca: textoOpcional(120),
   modelo: textoOpcional(120),
@@ -64,6 +65,7 @@ const listQuerySchema = z.object({
   rubroId: z.coerce.number().int().positive().optional(),
   estadoId: z.coerce.number().int().positive().optional(),
   areaId: z.coerce.number().int().positive().optional(),
+  responsableId: z.coerce.number().int().positive().optional(),
   activo: z.enum(["true", "false"]).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
@@ -82,18 +84,31 @@ const bajaSchema = z.object({
 bienesRouter.get("/", async (req, res) => {
   const query = listQuerySchema.parse(req.query);
   const where: any = {};
+  const condiciones: any[] = [];
 
   if (query.q) {
-    where.OR = [
-      { codigoInventario: { contains: query.q, mode: "insensitive" } },
-      { numeroIdentificacion: { contains: query.q, mode: "insensitive" } },
-      { descripcion: { contains: query.q, mode: "insensitive" } },
-      { marca: { contains: query.q, mode: "insensitive" } },
-      { modelo: { contains: query.q, mode: "insensitive" } },
-      { numeroSerie: { contains: query.q, mode: "insensitive" } },
-      { patente: { contains: query.q, mode: "insensitive" } },
-    ];
+    condiciones.push({
+      OR: [
+        { codigoInventario: { contains: query.q, mode: "insensitive" } },
+        { descripcion: { contains: query.q, mode: "insensitive" } },
+        { marca: { contains: query.q, mode: "insensitive" } },
+        { modelo: { contains: query.q, mode: "insensitive" } },
+        { numeroSerie: { contains: query.q, mode: "insensitive" } },
+        { patente: { contains: query.q, mode: "insensitive" } },
+      ],
+    });
   }
+
+  if (query.responsableId) {
+    condiciones.push({
+      OR: [
+        { subresponsableId: query.responsableId },
+        { area: { responsableId: query.responsableId } },
+      ],
+    });
+  }
+
+  if (condiciones.length) where.AND = condiciones;
 
   if (query.rubroId) where.rubroId = query.rubroId;
   if (query.estadoId) where.estadoId = query.estadoId;

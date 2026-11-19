@@ -23,6 +23,9 @@ dashboardRouter.get("/", async (_req, res) => {
     ultimasUbicaciones,
     porRubro,
     porEstado,
+    porArea,
+    sinResponsable,
+    sinUbicacion,
   ] = await Promise.all([
     prisma.bien.count(),
     prisma.bien.count({ where: { activo: true } }),
@@ -67,6 +70,19 @@ dashboardRouter.get("/", async (_req, res) => {
       where: { activo: true },
       _count: { _all: true },
     }),
+    prisma.bien.groupBy({
+      by: ["areaId"],
+      where: { activo: true },
+      _count: { _all: true },
+    }),
+    prisma.bien.count({
+      where: {
+        activo: true,
+        subresponsableId: null,
+        OR: [{ areaId: null }, { area: { responsableId: null } }],
+      },
+    }),
+    prisma.bien.count({ where: { activo: true, areaId: null } }),
   ]);
 
   const stockBajo = consumibles.filter(
@@ -83,8 +99,16 @@ dashboardRouter.get("/", async (_req, res) => {
     select: { id: true, nombre: true },
   });
 
+  const areas = await prisma.area.findMany({
+    where: {
+      id: { in: porArea.flatMap((item) => (item.areaId ? [item.areaId] : [])) },
+    },
+    select: { id: true, nombre: true },
+  });
+
   const nombreRubro = new Map(rubros.map((item) => [item.id, item.nombre]));
   const nombreEstado = new Map(estados.map((item) => [item.id, item.nombre]));
+  const nombreArea = new Map(areas.map((item) => [item.id, item.nombre]));
 
   const movimientos = [
     ...ultimosStock.map((item) => ({
@@ -119,6 +143,8 @@ dashboardRouter.get("/", async (_req, res) => {
       total: totalBienes,
       activos: bienesActivos,
       baja: bienesBaja,
+      sinResponsable,
+      sinUbicacion,
     },
     consumibles: {
       total: totalConsumibles,
@@ -144,6 +170,15 @@ dashboardRouter.get("/", async (_req, res) => {
       .map((item) => ({
         estadoId: item.estadoId,
         nombre: nombreEstado.get(item.estadoId) ?? "Sin estado",
+        cantidad: item._count._all,
+      }))
+      .sort((a, b) => b.cantidad - a.cantidad),
+    bienesPorArea: porArea
+      .map((item) => ({
+        areaId: item.areaId,
+        nombre: item.areaId
+          ? (nombreArea.get(item.areaId) ?? "Área eliminada")
+          : "Sin área",
         cantidad: item._count._all,
       }))
       .sort((a, b) => b.cantidad - a.cantidad),

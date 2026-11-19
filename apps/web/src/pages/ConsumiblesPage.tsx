@@ -33,7 +33,9 @@ import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import SearchIcon from "@mui/icons-material/Search";
 import EditIcon from "@mui/icons-material/Edit";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
+import HistoryIcon from "@mui/icons-material/History";
 import { api } from "../lib/api";
+import { useAuth } from "../auth/AuthContext";
 import { ErrorCarga } from "../components/ErrorCarga";
 import { alertaError, alertaExito } from "../lib/errors";
 import { formatoNumero } from "../lib/format";
@@ -59,6 +61,7 @@ const formInicial: FormConsumible = {
 
 export function ConsumiblesPage() {
   const navigate = useNavigate();
+  const { usuario } = useAuth();
   const queryClient = useQueryClient();
   const [q, setQ] = useState("");
   const [stockBajo, setStockBajo] = useState("");
@@ -197,14 +200,16 @@ export function ConsumiblesPage() {
           </Typography>
         </Box>
         <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
-          <Button
-            variant="outlined"
-            onClick={() =>
-              navigate("/configuracion?tab=2&volver=consumibles")
-            }
-          >
-            Categorías
-          </Button>
+          {usuario?.rol === "CONTABLE" && (
+            <Button
+              variant="outlined"
+              onClick={() =>
+                navigate("/configuracion?tab=2&volver=consumibles")
+              }
+            >
+              Categorías
+            </Button>
+          )}
           <Button variant="outlined" onClick={() => navigate("/entregas")}>
             Ver entregas
           </Button>
@@ -213,10 +218,10 @@ export function ConsumiblesPage() {
             startIcon={<ReceiptLongIcon />}
             onClick={() => navigate("/entregas/nueva")}
           >
-            Nueva entrega
+            Entregar
           </Button>
           <Button variant="outlined" startIcon={<AddIcon />} onClick={abrirNuevo}>
-            Nuevo consumible
+            Nuevo
           </Button>
         </Stack>
       </Box>
@@ -354,6 +359,13 @@ export function ConsumiblesPage() {
                     <TableCell align="right">
                       <IconButton
                         size="small"
+                        title="Ver historial"
+                        onClick={() => navigate(`/consumibles/${consumible.id}`)}
+                      >
+                        <HistoryIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
                         title="Registrar movimiento"
                         onClick={() => abrirMovimiento(consumible)}
                       >
@@ -405,7 +417,11 @@ export function ConsumiblesPage() {
               onChange={(event) =>
                 setForm({ ...form, categoriaId: event.target.value })
               }
-              helperText="Se administran en Configuración → Categorías de consumibles."
+              helperText={
+                usuario?.rol === "CONTABLE"
+                  ? "Se administran en Configuración → Categorías de consumibles."
+                  : "Las categorías son administradas por el área contable."
+              }
             >
               <MenuItem value="">Sin categoría</MenuItem>
               {(categorias ?? [])

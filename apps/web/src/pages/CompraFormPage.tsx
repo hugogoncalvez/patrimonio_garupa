@@ -27,6 +27,7 @@ import { ErrorCarga } from "../components/ErrorCarga";
 import { alertaError } from "../lib/errors";
 import { formatoMoneda, hoyISO } from "../lib/format";
 import type {
+  Area,
   Compra,
   CompraComprobante,
   Consumible,
@@ -160,6 +161,7 @@ export function CompraFormPage() {
   const queryClient = useQueryClient();
   const [fecha, setFecha] = useState(hoyISO());
   const [organismo, setOrganismo] = useState<"DE" | "HCD">("DE");
+  const [areaDestinoId, setAreaDestinoId] = useState("");
   const [numeroOrdenPago, setNumeroOrdenPago] = useState("");
   const [observaciones, setObservaciones] = useState("");
   const [proveedor, setProveedor] = useState<Proveedor | null>(null);
@@ -204,6 +206,11 @@ export function CompraFormPage() {
   const { data: rubros, error: errorRubros } = useQuery<Rubro[]>({
     queryKey: ["rubros"],
     queryFn: async () => (await api.get("/catalogos/rubros")).data,
+  });
+
+  const { data: areas } = useQuery<Area[]>({
+    queryKey: ["areas"],
+    queryFn: async () => (await api.get("/catalogos/areas")).data,
   });
 
   const { data: categoriasConsumible } = useQuery<
@@ -396,6 +403,7 @@ export function CompraFormPage() {
         await api.post("/compras", {
           fecha: new Date(`${fecha}T12:00:00`).toISOString(),
           organismo,
+          areaDestinoId: areaDestinoId ? Number(areaDestinoId) : null,
           numeroOrdenPago: numeroOrdenPago.trim() || null,
           proveedorId: proveedor.id,
           observaciones: observaciones.trim() || null,
@@ -472,6 +480,22 @@ export function CompraFormPage() {
             >
               <MenuItem value="DE">Departamento Ejecutivo</MenuItem>
               <MenuItem value="HCD">Honorable Concejo Deliberante</MenuItem>
+            </TextField>
+            <TextField
+              select
+              label="Área destino"
+              value={areaDestinoId}
+              onChange={(event) => setAreaDestinoId(event.target.value)}
+              helperText="Opcional. Se usa para imputar los bienes al recibir la compra."
+            >
+              <MenuItem value="">Sin área definida</MenuItem>
+              {(areas ?? [])
+                .filter((area) => area.activo)
+                .map((area) => (
+                  <MenuItem key={area.id} value={String(area.id)}>
+                    {area.nombre}
+                  </MenuItem>
+                ))}
             </TextField>
             <TextField
               label="N° de orden de pago"

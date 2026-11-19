@@ -7,6 +7,7 @@ import { BienesPage } from "./pages/BienesPage";
 import { BienFormPage } from "./pages/BienFormPage";
 import { BienDetailPage } from "./pages/BienDetailPage";
 import { ConsumiblesPage } from "./pages/ConsumiblesPage";
+import { ConsumibleDetailPage } from "./pages/ConsumibleDetailPage";
 import { EntregasPage } from "./pages/EntregasPage";
 import { EntregaFormPage } from "./pages/EntregaFormPage";
 import { EntregaDetailPage } from "./pages/EntregaDetailPage";
@@ -16,6 +17,7 @@ import { CompraDetailPage } from "./pages/CompraDetailPage";
 import { CatalogosPage } from "./pages/CatalogosPage";
 import { UsuariosPage } from "./pages/UsuariosPage";
 import { AuditoriaPage } from "./pages/AuditoriaPage";
+import { ReportesPage } from "./pages/ReportesPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 
 export function App() {
@@ -35,21 +37,30 @@ export function App() {
         <Route path="/bienes/:id" element={<BienDetailPage />} />
         <Route path="/bienes/:id/editar" element={<BienFormPage />} />
         <Route path="/consumibles" element={<ConsumiblesPage />} />
+        <Route path="/consumibles/:id" element={<ConsumibleDetailPage />} />
         <Route path="/entregas" element={<EntregasPage />} />
         <Route path="/entregas/nueva" element={<EntregaFormPage />} />
         <Route path="/entregas/:id" element={<EntregaDetailPage />} />
         <Route path="/compras" element={<ComprasPage />} />
+        <Route path="/reportes" element={<ReportesPage />} />
+        <Route path="/compras/nueva" element={<CompraFormPage />} />
+        <Route path="/compras/:id" element={<CompraDetailPage />} />
         <Route
-          path="/compras/nueva"
+          path="/configuracion"
           element={
-            <RutaContable redirectTo="/compras">
-              <CompraFormPage />
+            <RutaContable>
+              <CatalogosPage />
             </RutaContable>
           }
         />
-        <Route path="/compras/:id" element={<CompraDetailPage />} />
-        <Route path="/configuracion" element={<CatalogosPage />} />
-        <Route path="/catalogos" element={<CatalogosPage />} />
+        <Route
+          path="/catalogos"
+          element={
+            <RutaContable>
+              <CatalogosPage />
+            </RutaContable>
+          }
+        />
         <Route
           path="/usuarios"
           element={

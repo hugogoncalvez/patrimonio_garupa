@@ -84,6 +84,7 @@ model Usuario {
   pass      String   @db.VarChar(255)
   rol       Rol      @default(PATRIMONIO)
   activo    Boolean  @default(true)
+  configuracionEtiqueta Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -113,6 +114,7 @@ model Area {
   movimientosDestino  MovimientoUbicacion[] @relation("UbicacionDestino")
   movimientosStock    MovimientoStock[]     @relation("StockAreaDestino")
   entregasConsumibles EntregaConsumible[]   @relation("EntregaAreaDestino")
+  compras             Compra[]              @relation("CompraAreaDestino")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -171,7 +173,6 @@ model EstadoBien {
 model Bien {
   id                   Int     @id @default(autoincrement())
   codigoInventario     String  @unique @db.VarChar(40)
-  numeroIdentificacion String  @unique @db.VarChar(40)
   descripcion          String  @db.VarChar(300)
   marca                String? @db.VarChar(120)
   modelo               String? @db.VarChar(120)
@@ -292,6 +293,8 @@ model Compra {
   proveedor        String?      @db.VarChar(150)
   proveedorId      Int?
   proveedorDatos   Proveedor?   @relation(fields: [proveedorId], references: [id], onDelete: SetNull)
+  areaDestinoId    Int?
+  areaDestino      Area?        @relation("CompraAreaDestino", fields: [areaDestinoId], references: [id], onDelete: SetNull)
   observaciones    String?      @db.Text
 
   creadoPorId Int?
@@ -310,6 +313,7 @@ model Compra {
   @@index([organismo])
   @@index([estado])
   @@index([proveedorId])
+  @@index([areaDestinoId])
   @@index([numeroOrdenPago])
 }
 

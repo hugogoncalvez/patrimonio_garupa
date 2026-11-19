@@ -11,6 +11,23 @@ export interface Usuario {
   updatedAt?: string;
 }
 
+export interface ConfiguracionEtiqueta {
+  version: 1;
+  hojaAnchoMm: number;
+  hojaAltoMm: number;
+  columnas: number;
+  filas: number;
+  etiquetaAnchoMm: number;
+  etiquetaAltoMm: number;
+  margenSuperiorMm: number;
+  margenIzquierdoMm: number;
+  separacionXMm: number;
+  separacionYMm: number;
+  ajusteXMm: number;
+  ajusteYMm: number;
+  qrTamanoMm: number;
+}
+
 export interface Rubro {
   id: number;
   nombre: string;
@@ -58,7 +75,6 @@ export interface Persona {
 export interface Bien {
   id: number;
   codigoInventario: string;
-  numeroIdentificacion: string;
   descripcion: string;
   marca?: string | null;
   modelo?: string | null;
@@ -87,7 +103,11 @@ export interface Bien {
   ejercicioAlta?: number | null;
   rubro?: { id: number; nombre: string; codigoCuenta?: string | null };
   estado?: { id: number; nombre: string };
-  area?: { id: number; nombre: string } | null;
+  area?: {
+    id: number;
+    nombre: string;
+    responsable?: { id: number; nombre: string; apellido: string } | null;
+  } | null;
   subresponsable?: { id: number; nombre: string; apellido: string } | null;
   movimientosCustodia?: MovimientoCustodia[];
   movimientosUbicacion?: MovimientoUbicacion[];
@@ -160,6 +180,9 @@ export interface MovimientoStock {
   areaDestino?: { id: number; nombre: string } | null;
   usuario?: { id: number; nombre: string; apellido: string } | null;
   entregaId?: number | null;
+  entrega?: { id: number; numero: string } | null;
+  compraId?: number | null;
+  compra?: { id: number; numeroOrdenPago?: string | null } | null;
   nombreConsumibleSnapshot?: string | null;
   unidadMedidaSnapshot?: string | null;
   orden?: number | null;
@@ -220,7 +243,6 @@ export interface CompraComprobante {
 export interface BienResumen {
   id: number;
   codigoInventario: string;
-  numeroIdentificacion?: string;
   descripcion: string;
   estado?: { id: number; nombre: string } | null;
 }
@@ -279,6 +301,8 @@ export interface Compra {
   proveedor?: string | null;
   proveedorId?: number | null;
   proveedorDatos?: Proveedor | null;
+  areaDestinoId?: number | null;
+  areaDestino?: { id: number; nombre: string } | null;
   observaciones?: string | null;
   creadoPor?: { id: number; nombre: string; apellido: string } | null;
   comprobantes: CompraComprobante[];
@@ -288,7 +312,13 @@ export interface Compra {
 }
 
 export interface DashboardData {
-  bienes: { total: number; activos: number; baja: number };
+  bienes: {
+    total: number;
+    activos: number;
+    baja: number;
+    sinResponsable: number;
+    sinUbicacion: number;
+  };
   consumibles: {
     total: number;
     activos: number;
@@ -304,6 +334,7 @@ export interface DashboardData {
   comprasMes: number;
   bienesPorRubro: { rubroId: number; nombre: string; cantidad: number }[];
   bienesPorEstado: { estadoId: number; nombre: string; cantidad: number }[];
+  bienesPorArea: { areaId: number | null; nombre: string; cantidad: number }[];
   movimientosRecientes: {
     id: string;
     categoria: string;
@@ -352,4 +383,43 @@ export interface Paginado<T> {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+export interface ReporteBienesPorArea {
+  items: (Bien & {
+    responsable?: { id: number; nombre: string; apellido: string } | null;
+  })[];
+  total: number;
+  resumen: {
+    areaId: number | null;
+    area: string;
+    responsable: string;
+    cantidad: number;
+  }[];
+}
+
+export interface ReporteBienesPorResponsable {
+  items: (Bien & {
+    responsable?: { id: number; nombre: string; apellido: string } | null;
+  })[];
+  total: number;
+}
+
+export interface ReporteConsumiblesStock {
+  items: Consumible[];
+  total: number;
+}
+
+export interface ReporteMovimientosStock {
+  items: MovimientoStock[];
+  total: number;
+}
+
+export interface ReporteComprasPeriodo {
+  items: (Compra & {
+    comprobantes: CompraComprobante[];
+    detalles: CompraDetalle[];
+  })[];
+  total: number;
+  totalPeriodo: number;
 }

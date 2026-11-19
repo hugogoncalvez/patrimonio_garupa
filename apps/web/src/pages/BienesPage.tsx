@@ -26,13 +26,22 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
 import { ErrorCarga } from "../components/ErrorCarga";
 import { formatoMoneda } from "../lib/format";
-import type { Bien, EstadoBien, Paginado, Rubro } from "../types";
+import type {
+  Area,
+  Bien,
+  EstadoBien,
+  Paginado,
+  Persona,
+  Rubro,
+} from "../types";
 
 export function BienesPage() {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [rubroId, setRubroId] = useState("");
   const [estadoId, setEstadoId] = useState("");
+  const [areaId, setAreaId] = useState("");
+  const [responsableId, setResponsableId] = useState("");
   const [activo, setActivo] = useState("");
   const [page, setPage] = useState(0);
 
@@ -46,8 +55,18 @@ export function BienesPage() {
     queryFn: async () => (await api.get("/catalogos/estados")).data,
   });
 
+  const { data: areas } = useQuery<Area[]>({
+    queryKey: ["areas"],
+    queryFn: async () => (await api.get("/catalogos/areas")).data,
+  });
+
+  const { data: personas } = useQuery<Persona[]>({
+    queryKey: ["personas"],
+    queryFn: async () => (await api.get("/catalogos/personas")).data,
+  });
+
   const { data, isLoading, error, refetch } = useQuery<Paginado<Bien>>({
-    queryKey: ["bienes", q, rubroId, estadoId, activo, page],
+    queryKey: ["bienes", q, rubroId, estadoId, areaId, responsableId, activo, page],
     queryFn: async () => {
       const params: Record<string, string | number> = {
         page: page + 1,
@@ -56,6 +75,8 @@ export function BienesPage() {
       if (q.trim()) params.q = q.trim();
       if (rubroId) params.rubroId = rubroId;
       if (estadoId) params.estadoId = estadoId;
+      if (areaId) params.areaId = areaId;
+      if (responsableId) params.responsableId = responsableId;
       if (activo) params.activo = activo;
       return (await api.get("/bienes", { params })).data;
     },
@@ -93,7 +114,9 @@ export function BienesPage() {
             display: "grid",
             gridTemplateColumns: {
               xs: "1fr",
-              md: "minmax(220px, 1fr) 190px 190px 150px",
+              sm: "repeat(2, 1fr)",
+              md: "repeat(3, 1fr)",
+              lg: "minmax(220px, 1.5fr) repeat(5, minmax(130px, 1fr))",
             },
             gap: 2,
           }}
@@ -151,6 +174,38 @@ export function BienesPage() {
           <Select
             size="small"
             displayEmpty
+            value={areaId}
+            onChange={(event) => {
+              setAreaId(event.target.value);
+              setPage(0);
+            }}
+          >
+            <MenuItem value="">Todas las áreas</MenuItem>
+            {areas?.map((area) => (
+              <MenuItem key={area.id} value={String(area.id)}>
+                {area.nombre}
+              </MenuItem>
+            ))}
+          </Select>
+          <Select
+            size="small"
+            displayEmpty
+            value={responsableId}
+            onChange={(event) => {
+              setResponsableId(event.target.value);
+              setPage(0);
+            }}
+          >
+            <MenuItem value="">Todos los responsables</MenuItem>
+            {personas?.filter((persona) => persona.activo).map((persona) => (
+              <MenuItem key={persona.id} value={String(persona.id)}>
+                {persona.apellido}, {persona.nombre}
+              </MenuItem>
+            ))}
+          </Select>
+          <Select
+            size="small"
+            displayEmpty
             value={activo}
             onChange={(event) => {
               setActivo(event.target.value);
@@ -170,7 +225,6 @@ export function BienesPage() {
             <TableHead>
               <TableRow>
                 <TableCell>Código</TableCell>
-                <TableCell>N° identificación</TableCell>
                 <TableCell>Descripción</TableCell>
                 <TableCell>Rubro</TableCell>
                 <TableCell>Estado</TableCell>
@@ -183,7 +237,7 @@ export function BienesPage() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
+                  <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
                     <CircularProgress size={28} />
                   </TableCell>
                 </TableRow>
@@ -191,7 +245,7 @@ export function BienesPage() {
 
               {error && (
                 <TableRow>
-                  <TableCell colSpan={9} sx={{ py: 2 }}>
+                  <TableCell colSpan={8} sx={{ py: 2 }}>
                     <ErrorCarga
                       error={error}
                       onRetry={() => void refetch()}
@@ -203,7 +257,7 @@ export function BienesPage() {
 
               {!isLoading && !error && data?.items.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
+                  <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
                     <Typography color="text.secondary">
                       No se encontraron bienes.
                     </Typography>
@@ -223,7 +277,6 @@ export function BienesPage() {
                       {bien.codigoInventario}
                     </Typography>
                   </TableCell>
-                  <TableCell>{bien.numeroIdentificacion}</TableCell>
                   <TableCell>
                     <Typography variant="body2">{bien.descripcion}</Typography>
                     {bien.marca && (
@@ -238,7 +291,9 @@ export function BienesPage() {
                   <TableCell>
                     {bien.subresponsable
                       ? `${bien.subresponsable.apellido}, ${bien.subresponsable.nombre}`
-                      : "-"}
+                      : bien.area?.responsable
+                        ? `${bien.area.responsable.apellido}, ${bien.area.responsable.nombre}`
+                        : "-"}
                   </TableCell>
                   <TableCell align="right">
                     {formatoMoneda(bien.valorHistorico)}

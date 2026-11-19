@@ -32,7 +32,6 @@ Que el Encargado de Patrimonio pueda dejar de trabajar con planillas sueltas y a
 - Todos los consumibles y su stock.
 - Ubicaciones, responsables y subresponsables.
 - Ingresos por compra o entrega.
-- Documentación de respaldo.
 - Etiquetas con código QR.
 - Búsquedas y reportes operativos básicos.
 
@@ -60,7 +59,6 @@ Puede operar el día a día:
 - Alta, edición y baja de consumibles.
 - Registro de ingresos, compras simples y entregas.
 - Movimientos de ubicación y custodia.
-- Carga de documentación.
 - Impresión de etiquetas QR.
 - Consulta de stock, bienes por área y bienes por responsable.
 - Uso de catálogos operativos.
@@ -79,7 +77,7 @@ Puede todo:
 - Todo lo que hace Patrimonio.
 - Gestión de usuarios y roles.
 - Configuración de catálogos y parámetros.
-- Acceso a valores, reportes y documentación completa.
+- Acceso a valores, reportes y datos completos.
 - En Etapa 2: libros, cierres, rúbrica, conciliación y presentaciones.
 
 ### 3.3 Matriz resumida
@@ -90,7 +88,6 @@ Puede todo:
 | Consumibles y stock | Sí | Sí |
 | Ingresos y compras simples | Sí | Sí |
 | Ubicaciones y custodia | Sí | Sí |
-| Documentos | Sí | Sí |
 | Etiquetas QR | Sí | Sí |
 | Usuarios y configuración | No | Sí |
 | Libros HTC | No | Sí (Etapa 2) |
@@ -120,14 +117,12 @@ Puede todo:
 - **Áreas/dependencias:** nombre, dirección, responsable.
 - **Personas:** nombre, apellido, DNI, cargo, área.
 - **Tipos de incorporación:** compra, donación, transferencia, préstamo, etc.
-- **Tipos de documento:** factura, remito, acta, resolución, etc.
 
 ### 4.3 Bienes registrables
 
 Campos mínimos:
 
-- Código de inventario único y no reutilizable.
-- Número de identificación visible.
+- Código de inventario único y no reutilizable, visible en el bien.
 - Descripción.
 - Marca, modelo, número de serie.
 - Número de motor y patente para vehículos.
@@ -149,9 +144,27 @@ Funcionalidades:
 - Generación e impresión de etiqueta QR.
 - Historial de custodias.
 - Historial de ubicaciones.
-- Adjuntar documentación de respaldo.
 - Búsqueda por código, descripción, rubro, área, estado y responsable.
 - Ficha completa del bien.
+
+Alternativa evaluada para el QR (no implementada):
+
+- Ficha pública por token opaco, por ejemplo `/p/{token}`, sin login.
+- Muestra solo datos seguros: código, descripción, rubro, estado, área y fecha de alta.
+- No incluye foto, datos personales, valores, documentos ni observaciones.
+- No incluye “reportar problema”.
+- Requiere campo `publicToken` único, endpoint público de solo lectura, rate limiting y un dominio estable configurado en `VITE_PUBLIC_APP_URL`.
+
+Decisión actual: el QR contiene texto sin conexión con código, descripción, marca, modelo y dominio cuando corresponde.
+
+Impresión de etiquetas:
+
+- Configuración por usuario guardada en `Usuario.configuracionEtiqueta` (JSON), disponible en cualquier PC al iniciar sesión.
+- Presets A4 y ajuste manual de hoja, grilla, márgenes, separación y tamaño del QR.
+- Selector visual de celda inicial por impresión; permite reutilizar una hoja parcialmente usada.
+- La celda inicial no se guarda en la configuración permanente.
+- El motor de impresión acepta varias etiquetas y páginas para habilitar la impresión por lote en una fase posterior.
+- Para calibrar la impresora se incluye una prueba que imprime la grilla numerada sin QR.
 
 ### 4.4 Consumibles
 
@@ -182,7 +195,7 @@ Cabecera:
 
 - Fecha.
 - Proveedor.
-- Tipo y número de comprobante.
+- Tipo, número y fecha de comprobante.
 - Observaciones.
 - Área destino, si corresponde.
 
@@ -198,7 +211,7 @@ Efectos:
 - Los bienes ingresados se crean o vinculan en el inventario.
 - Los consumibles generan movimiento de ingreso y actualizan stock.
 - La compra queda asociada a los bienes y consumibles.
-- Se puede adjuntar factura o remito.
+- El comprobante queda registrado como dato de la compra, sin archivos adjuntos.
 
 No incluye en Etapa 1:
 
@@ -218,14 +231,7 @@ No incluye en Etapa 1:
 
 Los PDF de actas y dispositivos de designación quedan para Etapa 2, salvo que se decida incorporar una versión simple en Etapa 1.
 
-### 4.7 Documentación
-
-- Adjuntar archivos a bienes y compras.
-- Registrar tipo, número y fecha del documento.
-- Consultar y descargar documentación.
-- Control básico de documentación faltante.
-
-### 4.8 Dashboard y reportes operativos
+### 4.7 Dashboard y reportes operativos
 
 Indicadores:
 
@@ -247,7 +253,7 @@ Reportes operativos:
 
 Sin formato oficial del HTC en Etapa 1.
 
-### 4.9 Auditoría
+### 4.8 Auditoría
 
 - Registrar quién creó, modificó o dio de baja cada registro.
 - Guardar fecha y datos anteriores/nuevos.
@@ -274,7 +280,6 @@ Entidades principales:
 | `compras_detalle` | Bienes o consumibles ingresados. |
 | `movimientos_custodia` | Historial de responsables. |
 | `movimientos_ubicacion` | Historial de áreas. |
-| `documentos` | Archivos y referencias. |
 | `auditoria` | Log de operaciones. |
 
 ### 5.1 Campos preparados para Etapa 2
@@ -305,6 +310,7 @@ En Etapa 2 se agregarán:
 ## 6. Fuera de alcance de Etapa 1
 
 - Importación masiva desde Excel.
+- Documentación adjunta y almacenamiento de archivos en la base de datos.
 - Libros y planillas del HTC (Modelos 20, 21 y 22).
 - Rúbrica digital.
 - Cierres por ejercicio.
@@ -334,7 +340,6 @@ En Etapa 2 se agregarán:
 - Código único.
 - QR y etiqueta.
 - Ficha del bien.
-- Documentos adjuntos.
 - Búsqueda y filtros.
 - Historial de custodia y ubicación.
 
@@ -350,7 +355,6 @@ En Etapa 2 se agregarán:
 
 - Cabecera y detalle de compras/ingresos.
 - Vinculación con bienes y consumibles.
-- Documentación de compra.
 - Dashboard operativo.
 - Reportes operativos.
 - Pruebas integrales y puesta en marcha.
@@ -389,7 +393,6 @@ En Etapa 2 se agregarán:
 - Órdenes de pago.
 - Actas de recepción.
 - Circuito de autorizaciones.
-- Documentación completa.
 
 ### 8.5 Otros módulos
 
@@ -424,7 +427,7 @@ Este documento cambia únicamente el orden de implementación:
 | Riesgo | Mitigación |
 |---|---|
 | Carga manual inicial lenta | Formularios simples, catálogos precargados y validaciones claras. |
-| Datos incompletos | Campos obligatorios por rubro y checklist de documentación. |
+| Datos incompletos | Campos obligatorios por rubro y checklist de datos mínimos. |
 | Duplicación de bienes | Código único y búsqueda por número de serie/patente. |
 | Resistencia al cambio | Interfaz simple y flujo guiado para el encargado. |
 | Crecimiento del alcance | Etapa 2 cerrada y fuera de alcance de Etapa 1. |
@@ -440,7 +443,6 @@ Este documento cambia únicamente el orden de implementación:
 - Puede imprimir y reimprimir etiquetas QR.
 - Puede registrar ingresos y entregas de consumibles.
 - Puede ver el stock actual y las alertas de stock mínimo.
-- Puede adjuntar y consultar documentación.
 - El Contable puede administrar usuarios y acceder a toda la información.
 - Patrimonio no accede a módulos contables.
 
@@ -449,7 +451,7 @@ Este documento cambia únicamente el orden de implementación:
 ## 12. Próximos pasos
 
 1. Validar este alcance con el Encargado de Patrimonio y Contaduría.
-2. Definir el formato del código de inventario y del número de identificación.
+2. Definir el formato del código de inventario.
 3. Relevar áreas, personas y rubros iniciales.
 4. Confirmar si Patrimonio debe ver el valor histórico del bien.
 5. Arrancar la Fase 1 de Etapa 1.

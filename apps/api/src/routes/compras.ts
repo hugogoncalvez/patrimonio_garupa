@@ -19,6 +19,7 @@ comprasRouter.use(requireAuth);
 
 const compraInclude = {
   creadoPor: { select: { id: true, nombre: true, apellido: true } },
+  areaDestino: { select: { id: true, nombre: true } },
   proveedorDatos: {
     select: {
       id: true,
@@ -47,7 +48,6 @@ const compraInclude = {
         select: {
           id: true,
           codigoInventario: true,
-          numeroIdentificacion: true,
           descripcion: true,
           estado: { select: { id: true, nombre: true } },
         },
@@ -129,6 +129,7 @@ const compraSchema = z
     fecha: z.coerce.date(),
     organismo: z.enum(["DE", "HCD"]),
     numeroOrdenPago: textoOpcional(40),
+    areaDestinoId: idOpcional,
     proveedorId: idOpcional,
     proveedor: textoOpcional(150),
     observaciones: textoOpcional(2000),
@@ -157,6 +158,7 @@ const listQuerySchema = z.object({
   q: z.string().trim().optional(),
   organismo: z.enum(["DE", "HCD"]).optional(),
   estado: z.enum(["REGISTRADA", "RECIBIDA_PARCIAL", "RECIBIDA"]).optional(),
+  areaId: z.coerce.number().int().positive().optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
@@ -188,6 +190,7 @@ comprasRouter.get("/", async (req, res) => {
 
   if (query.organismo) where.organismo = query.organismo;
   if (query.estado) where.estado = query.estado;
+  if (query.areaId) where.areaDestinoId = query.areaId;
 
   const [items, total] = await Promise.all([
     prisma.compra.findMany({
@@ -209,7 +212,7 @@ comprasRouter.get("/", async (req, res) => {
   });
 });
 
-comprasRouter.post("/", requireRole("CONTABLE"), async (req, res) => {
+comprasRouter.post("/", requireRole("CONTABLE", "PATRIMONIO"), async (req, res) => {
   const data = compraSchema.parse(req.body);
 
   const creada = await prisma.$transaction(async (tx) => {
@@ -256,6 +259,7 @@ comprasRouter.post("/", requireRole("CONTABLE"), async (req, res) => {
         fecha: data.fecha,
         organismo: data.organismo,
         numeroOrdenPago: data.numeroOrdenPago,
+        areaDestinoId: data.areaDestinoId,
         proveedorId: data.proveedorId,
         proveedor: proveedorNombre,
         observaciones: data.observaciones,
@@ -323,7 +327,6 @@ comprasRouter.get("/:id", async (req, res) => {
                 select: {
                   id: true,
                   codigoInventario: true,
-                  numeroIdentificacion: true,
                   descripcion: true,
                 },
               },
@@ -533,10 +536,10 @@ comprasRouter.post("/:id/actas", requireRole("CONTABLE", "PATRIMONIO"), async (r
           await tx.bien.create({
             data: {
               codigoInventario: codigo,
-              numeroIdentificacion: codigo,
               descripcion: detalle.descripcion ?? "Bien sin descripción",
               rubroId: detalle.rubroId!,
               estadoId: estadoBien!.id,
+              areaId: compra.areaDestinoId,
               tipoIncorporacion: "COMPRA",
               fechaAlta: data.fecha,
               valorHistorico: detalle.precioUnitario,
@@ -615,7 +618,6 @@ comprasRouter.post("/:id/actas", requireRole("CONTABLE", "PATRIMONIO"), async (r
               select: {
                 id: true,
                 codigoInventario: true,
-                numeroIdentificacion: true,
                 descripcion: true,
               },
             },

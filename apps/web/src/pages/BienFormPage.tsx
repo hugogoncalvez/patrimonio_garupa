@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -26,23 +26,15 @@ import type { Area, Bien, EstadoBien, Persona, Rubro } from "../types";
 
 const schema = z.object({
   codigoInventario: z.string().trim().min(1, "El código es obligatorio").max(40),
-  numeroIdentificacion: z
-    .string()
-    .trim()
-    .min(1, "El número de identificación es obligatorio")
-    .max(40),
   descripcion: z.string().trim().min(1, "La descripción es obligatoria").max(300),
   rubroId: z.string().min(1, "Seleccioná un rubro"),
   estadoId: z.string().min(1, "Seleccioná un estado"),
   areaId: z.string().optional(),
   subresponsableId: z.string().optional(),
-  tipoIncorporacion: z.enum([
-    "COMPRA",
-    "DONACION",
-    "TRANSFERENCIA",
-    "PRESTAMO",
-    "OTRO",
-  ]),
+  tipoIncorporacion: z.enum(
+    ["COMPRA", "DONACION", "TRANSFERENCIA", "PRESTAMO", "OTRO"],
+    { error: "Seleccioná el tipo de incorporación" },
+  ),
   fechaAlta: z.string().min(1, "La fecha de alta es obligatoria"),
   valorHistorico: z.string().optional(),
   marca: z.string().optional(),
@@ -60,7 +52,6 @@ type FormValues = z.infer<typeof schema>;
 
 const valoresIniciales: FormValues = {
   codigoInventario: "",
-  numeroIdentificacion: "",
   descripcion: "",
   rubroId: "",
   estadoId: "",
@@ -120,6 +111,7 @@ export function BienFormPage() {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -131,7 +123,6 @@ export function BienFormPage() {
 
     reset({
       codigoInventario: bien.codigoInventario,
-      numeroIdentificacion: bien.numeroIdentificacion,
       descripcion: bien.descripcion,
       rubroId: String(bien.rubroId),
       estadoId: String(bien.estadoId),
@@ -139,7 +130,9 @@ export function BienFormPage() {
       subresponsableId: bien.subresponsableId
         ? String(bien.subresponsableId)
         : "",
-      tipoIncorporacion: bien.tipoIncorporacion as FormValues["tipoIncorporacion"],
+      tipoIncorporacion:
+        (bien.tipoIncorporacion as FormValues["tipoIncorporacion"]) ??
+        "COMPRA",
       fechaAlta: bien.fechaAlta.slice(0, 10),
       valorHistorico:
         bien.valorHistorico !== null && bien.valorHistorico !== undefined
@@ -272,13 +265,6 @@ export function BienFormPage() {
                   required
                 />
                 <TextField
-                  label="N° de identificación"
-                  {...register("numeroIdentificacion")}
-                  error={Boolean(errors.numeroIdentificacion)}
-                  helperText={errors.numeroIdentificacion?.message}
-                  required
-                />
-                <TextField
                   label="Descripción"
                   {...register("descripcion")}
                   error={Boolean(errors.descripcion)}
@@ -286,36 +272,48 @@ export function BienFormPage() {
                   required
                   sx={{ gridColumn: { md: "1 / -1" } }}
                 />
-                <TextField
-                  select
-                  label="Rubro"
-                  {...register("rubroId")}
-                  error={Boolean(errors.rubroId)}
-                  helperText={errors.rubroId?.message}
-                  required
-                >
-                  <MenuItem value="">Seleccionar...</MenuItem>
-                  {rubros?.map((rubro) => (
-                    <MenuItem key={rubro.id} value={String(rubro.id)}>
-                      {rubro.nombre}
-                    </MenuItem>
-                  ))}
-                </TextField>
-                <TextField
-                  select
-                  label="Estado"
-                  {...register("estadoId")}
-                  error={Boolean(errors.estadoId)}
-                  helperText={errors.estadoId?.message}
-                  required
-                >
-                  <MenuItem value="">Seleccionar...</MenuItem>
-                  {estados?.map((estado) => (
-                    <MenuItem key={estado.id} value={String(estado.id)}>
-                      {estado.nombre}
-                    </MenuItem>
-                  ))}
-                </TextField>
+                <Controller
+                  name="rubroId"
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <TextField
+                      select
+                      label="Rubro"
+                      {...field}
+                      error={Boolean(fieldState.error)}
+                      helperText={fieldState.error?.message}
+                      required
+                    >
+                      <MenuItem value="">Seleccionar...</MenuItem>
+                      {rubros?.map((rubro) => (
+                        <MenuItem key={rubro.id} value={String(rubro.id)}>
+                          {rubro.nombre}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
+                />
+                <Controller
+                  name="estadoId"
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <TextField
+                      select
+                      label="Estado"
+                      {...field}
+                      error={Boolean(fieldState.error)}
+                      helperText={fieldState.error?.message}
+                      required
+                    >
+                      <MenuItem value="">Seleccionar...</MenuItem>
+                      {estados?.map((estado) => (
+                        <MenuItem key={estado.id} value={String(estado.id)}>
+                          {estado.nombre}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
+                />
                 <TextField
                   label="Marca"
                   {...register("marca")}
@@ -364,17 +362,26 @@ export function BienFormPage() {
                   gap: 2,
                 }}
               >
-                <TextField
-                  select
-                  label="Tipo de incorporación"
-                  {...register("tipoIncorporacion")}
-                >
-                  <MenuItem value="COMPRA">Compra</MenuItem>
-                  <MenuItem value="DONACION">Donación</MenuItem>
-                  <MenuItem value="TRANSFERENCIA">Transferencia</MenuItem>
-                  <MenuItem value="PRESTAMO">Préstamo</MenuItem>
-                  <MenuItem value="OTRO">Otro</MenuItem>
-                </TextField>
+                <Controller
+                  name="tipoIncorporacion"
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <TextField
+                      select
+                      label="Tipo de incorporación"
+                      {...field}
+                      error={Boolean(fieldState.error)}
+                      helperText={fieldState.error?.message}
+                      required
+                    >
+                      <MenuItem value="COMPRA">Compra</MenuItem>
+                      <MenuItem value="DONACION">Donación</MenuItem>
+                      <MenuItem value="TRANSFERENCIA">Transferencia</MenuItem>
+                      <MenuItem value="PRESTAMO">Préstamo</MenuItem>
+                      <MenuItem value="OTRO">Otro</MenuItem>
+                    </TextField>
+                  )}
+                />
                 <TextField
                   label="Fecha de alta"
                   type="date"
@@ -390,30 +397,34 @@ export function BienFormPage() {
                   {...register("valorHistorico")}
                   slotProps={{ htmlInput: { step: "0.01", min: 0 } }}
                 />
-                <TextField
-                  select
-                  label="Área"
-                  {...register("areaId")}
-                >
-                  <MenuItem value="">Sin asignar</MenuItem>
-                  {areas?.map((area) => (
-                    <MenuItem key={area.id} value={String(area.id)}>
-                      {area.nombre}
-                    </MenuItem>
-                  ))}
-                </TextField>
-                <TextField
-                  select
-                  label="Subresponsable"
-                  {...register("subresponsableId")}
-                >
-                  <MenuItem value="">Sin asignar</MenuItem>
-                  {personas?.map((persona) => (
-                    <MenuItem key={persona.id} value={String(persona.id)}>
-                      {persona.apellido}, {persona.nombre}
-                    </MenuItem>
-                  ))}
-                </TextField>
+                <Controller
+                  name="areaId"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField select label="Área" {...field}>
+                      <MenuItem value="">Sin asignar</MenuItem>
+                      {areas?.map((area) => (
+                        <MenuItem key={area.id} value={String(area.id)}>
+                          {area.nombre}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
+                />
+                <Controller
+                  name="subresponsableId"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField select label="Subresponsable" {...field}>
+                      <MenuItem value="">Sin asignar</MenuItem>
+                      {personas?.map((persona) => (
+                        <MenuItem key={persona.id} value={String(persona.id)}>
+                          {persona.apellido}, {persona.nombre}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
+                />
                 <TextField
                   label="Observaciones"
                   {...register("observaciones")}

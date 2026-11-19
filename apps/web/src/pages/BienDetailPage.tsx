@@ -27,7 +27,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import RestoreIcon from "@mui/icons-material/Restore";
-import { QRCodeSVG } from "qrcode.react";
+import { EtiquetaQr } from "../components/EtiquetaQr";
 import { DocumentosBien } from "../components/DocumentosBien";
 import { api } from "../lib/api";
 import { ErrorCarga } from "../components/ErrorCarga";
@@ -224,7 +224,6 @@ export function BienDetailPage() {
                   gap: 2,
                 }}
               >
-                <Dato label="N° identificación" value={bien.numeroIdentificacion} />
                 <Dato label="Rubro" value={bien.rubro?.nombre} />
                 <Dato label="Estado" value={bien.estado?.nombre} />
                 <Dato label="Marca" value={bien.marca} />
@@ -242,6 +241,14 @@ export function BienDetailPage() {
                 <Dato label="Fecha de alta" value={formatoFecha(bien.fechaAlta)} />
                 <Dato label="Valor histórico" value={formatoMoneda(bien.valorHistorico)} />
                 <Dato label="Área" value={bien.area?.nombre} />
+                <Dato
+                  label="Responsable del área"
+                  value={
+                    bien.area?.responsable
+                      ? `${bien.area.responsable.apellido}, ${bien.area.responsable.nombre}`
+                      : null
+                  }
+                />
                 <Dato
                   label="Subresponsable"
                   value={
@@ -343,31 +350,13 @@ export function BienDetailPage() {
         </Stack>
 
         <Stack spacing={2}>
-          <Card>
-            <CardContent sx={{ textAlign: "center" }}>
-              <Typography variant="h6" gutterBottom>
-                Etiqueta QR
-              </Typography>
-              <Box
-                sx={{
-                  display: "inline-flex",
-                  p: 2,
-                  bgcolor: "white",
-                  borderRadius: 2,
-                  border: "1px solid",
-                  borderColor: "divider",
-                }}
-              >
-                <QRCodeSVG value={bien.codigoInventario} size={150} />
-              </Box>
-              <Typography variant="body2" sx={{ fontWeight: 700, mt: 1.5 }}>
-                {bien.codigoInventario}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {bien.descripcion}
-              </Typography>
-            </CardContent>
-          </Card>
+          <EtiquetaQr
+            codigo={bien.codigoInventario}
+            descripcion={bien.descripcion}
+            marca={bien.marca}
+            modelo={bien.modelo}
+            patente={bien.patente}
+          />
 
           {!bien.activo && (
             <Card>

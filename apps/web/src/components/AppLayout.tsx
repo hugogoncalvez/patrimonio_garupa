@@ -21,6 +21,7 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
 import WarehouseIcon from "@mui/icons-material/Warehouse";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import AssessmentIcon from "@mui/icons-material/Assessment";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
@@ -43,7 +44,13 @@ const navegacion: {
   { to: "/consumibles", label: "Consumibles", icon: <WarehouseIcon /> },
   { to: "/entregas", label: "Entregas de consumibles", icon: <ReceiptLongIcon /> },
   { to: "/compras", label: "Compras e ingresos", icon: <ShoppingCartIcon /> },
-  { to: "/configuracion", label: "Configuración", icon: <SettingsIcon /> },
+  { to: "/reportes", label: "Reportes", icon: <AssessmentIcon /> },
+  {
+    to: "/configuracion",
+    label: "Configuración",
+    icon: <SettingsIcon />,
+    roles: ["CONTABLE"],
+  },
   {
     to: "/usuarios",
     label: "Usuarios",
