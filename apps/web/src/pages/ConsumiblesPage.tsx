@@ -65,7 +65,7 @@ export function ConsumiblesPage() {
   const queryClient = useQueryClient();
   const [q, setQ] = useState("");
   const [stockBajo, setStockBajo] = useState("");
-  const [activo, setActivo] = useState("");
+  const [activo, setActivo] = useState("true");
   const [page, setPage] = useState(0);
 
   const [dialogo, setDialogo] = useState(false);
