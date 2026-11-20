@@ -26,6 +26,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import { api } from "../lib/api";
 import { ErrorCarga } from "../components/ErrorCarga";
 import { formatoFecha, formatoMoneda } from "../lib/format";
+import { useAuth } from "../auth/AuthContext";
 import type { Area, Compra, Paginado } from "../types";
 
 function totalCompra(compra: Compra) {
@@ -47,6 +48,7 @@ const estados: Record<
 
 export function ComprasPage() {
   const navigate = useNavigate();
+  const { usuario } = useAuth();
   const [q, setQ] = useState("");
   const [organismo, setOrganismo] = useState("");
   const [estado, setEstado] = useState("");
@@ -91,13 +93,15 @@ export function ComprasPage() {
             Compras, órdenes de pago y recepciones de bienes y consumibles.
           </Typography>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => navigate("/compras/nueva")}
-        >
-          Nueva compra
-        </Button>
+        {usuario?.rol === "CONTABLE" && (
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => navigate("/compras/nueva")}
+          >
+            Nueva compra
+          </Button>
+        )}
       </Box>
 
       <Card sx={{ p: 2 }}>

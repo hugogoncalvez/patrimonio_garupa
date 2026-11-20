@@ -214,7 +214,7 @@ comprasRouter.get("/", async (req, res) => {
   });
 });
 
-comprasRouter.post("/", requireRole("CONTABLE", "PATRIMONIO"), async (req, res) => {
+comprasRouter.post("/", requireRole("CONTABLE"), async (req, res) => {
   const data = compraSchema.parse(req.body);
 
   const creada = await prisma.$transaction(async (tx) => {

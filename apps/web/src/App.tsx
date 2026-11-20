@@ -43,7 +43,14 @@ export function App() {
         <Route path="/entregas/:id" element={<EntregaDetailPage />} />
         <Route path="/compras" element={<ComprasPage />} />
         <Route path="/reportes" element={<ReportesPage />} />
-        <Route path="/compras/nueva" element={<CompraFormPage />} />
+        <Route
+          path="/compras/nueva"
+          element={
+            <RutaContable>
+              <CompraFormPage />
+            </RutaContable>
+          }
+        />
         <Route path="/compras/:id" element={<CompraDetailPage />} />
         <Route
           path="/configuracion"

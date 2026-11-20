@@ -16,9 +16,9 @@
 | **Importación masiva** | No se implementa en Etapa 1. La carga inicial será manual. |
 | **Roles** | Dos roles: **Patrimonio** (operativo) y **Contable** (administrador total). |
 | **Contable** | Es el usuario administrador: hace todo y ve todo. |
-| **Patrimonio** | No accede a la parte contable: sin libros, cierres, rúbrica, conciliación ni reportes oficiales. |
+| **Patrimonio** | No accede a la parte contable: sin libros, cierres, rúbrica, conciliación ni reportes oficiales. No registra compras; solo recibe las compras registradas por Contable. |
 | **Bienes de Etapa 1** | Bienes registrables/inventariables (mobiliario, equipos, rodados, maquinaria, inmuebles) y consumibles. |
-| **Compras en Etapa 1** | Registro simple de compras/ingresos para dar entrada a bienes y consumibles. Sin expedientes ni órdenes de pago formales. |
+| **Compras en Etapa 1** | Contable registra la compra/ingreso; Patrimonio y Contable pueden recepcionar. Sin expedientes ni órdenes de pago formales. |
 
 ---
 
@@ -57,7 +57,7 @@ Puede operar el día a día:
 
 - Alta, edición y baja lógica de bienes.
 - Alta, edición y baja de consumibles.
-- Registro de ingresos, compras simples y entregas.
+- Recepción de compras y registro de ingresos/entregas operativas.
 - Movimientos de ubicación y custodia.
 - Impresión de etiquetas QR.
 - Consulta de stock, bienes por área y bienes por responsable.
@@ -65,6 +65,7 @@ Puede operar el día a día:
 
 No puede:
 
+- Registrar compras: la carga de proveedor, comprobantes y orden de pago queda a cargo de Contable.
 - Gestionar usuarios.
 - Ver o generar libros del HTC.
 - Ver cierres, rúbrica digital o conciliación contable.
@@ -86,7 +87,9 @@ Puede todo:
 |---|---|---|
 | Bienes registrables | Sí | Sí |
 | Consumibles y stock | Sí | Sí |
-| Ingresos y compras simples | Sí | Sí |
+| Registro de compras | No | Sí |
+| Recepción de compras | Sí | Sí |
+| Ingresos y entregas operativas | Sí | Sí |
 | Ubicaciones y custodia | Sí | Sí |
 | Etiquetas QR | Sí | Sí |
 | Usuarios y configuración | No | Sí |
@@ -200,6 +203,8 @@ Funcionalidades:
 
 Objetivo: dar entrada a bienes y consumibles sin implementar todavía el circuito formal de compras.
 
+Quién registra: el rol Contable carga la compra (proveedor, comprobantes, orden de pago y detalles). El rol Patrimonio no registra compras ni carga esos datos; solo recibe los bienes o consumibles y genera el acta de recepción operativa.
+
 Cabecera:
 
 - Fecha.
@@ -226,7 +231,7 @@ No incluye en Etapa 1:
 
 - Expediente de compra.
 - Orden de pago formal.
-- Acta de recepción con firma.
+- Acta de recepción con firma formal.
 - Circuito de autorizaciones.
 
 ### 4.6 Movimientos de custodia y ubicación
