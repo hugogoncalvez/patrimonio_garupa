@@ -123,7 +123,7 @@ export function BienesPage() {
         >
           <TextField
             size="small"
-            placeholder="Buscar por código, descripción, serie, patente..."
+            placeholder="Buscar por código, descripción, serie, patente, domicilio..."
             value={q}
             onChange={(event) => {
               setQ(event.target.value);

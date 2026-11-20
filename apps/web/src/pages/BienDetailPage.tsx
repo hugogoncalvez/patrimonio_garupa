@@ -36,8 +36,11 @@ import {
   formatoFecha,
   formatoFechaHora,
   formatoMoneda,
+  formatoNumero,
   hoyISO,
 } from "../lib/format";
+import { campoVisible, etiquetaSituacion } from "../lib/bienes";
+import { etiquetaOrganismo } from "../lib/organismos";
 import type { Bien } from "../types";
 
 const tiposIncorporacion: Record<string, string> = {
@@ -146,6 +149,8 @@ export function BienDetailPage() {
     return <Alert severity="error">No se encontró el bien.</Alert>;
   }
 
+  const familia = bien.rubro?.familia ?? "OTRO";
+
   return (
     <Stack spacing={2.5}>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -224,16 +229,42 @@ export function BienDetailPage() {
                   gap: 2,
                 }}
               >
+                <Dato
+                  label="Organismo"
+                  value={etiquetaOrganismo(bien.organismo)}
+                />
                 <Dato label="Rubro" value={bien.rubro?.nombre} />
                 <Dato label="Estado" value={bien.estado?.nombre} />
-                <Dato label="Marca" value={bien.marca} />
-                <Dato label="Modelo" value={bien.modelo} />
-                <Dato label="N° de serie" value={bien.numeroSerie} />
-                <Dato label="N° de motor" value={bien.numeroMotor} />
-                <Dato label="Patente" value={bien.patente} />
-                <Dato label="Material" value={bien.material} />
-                <Dato label="Medidas" value={bien.medidas} />
-                <Dato label="Color" value={bien.color} />
+                {familia === "INMUEBLE" && (
+                  <Dato
+                    label="Situación"
+                    value={etiquetaSituacion(bien.situacionInmueble)}
+                  />
+                )}
+                {campoVisible("marca", familia) && (
+                  <Dato label="Marca" value={bien.marca} />
+                )}
+                {campoVisible("modelo", familia) && (
+                  <Dato label="Modelo" value={bien.modelo} />
+                )}
+                {campoVisible("numeroSerie", familia) && (
+                  <Dato label="N° de serie" value={bien.numeroSerie} />
+                )}
+                {campoVisible("numeroMotor", familia) && (
+                  <Dato label="N° de motor" value={bien.numeroMotor} />
+                )}
+                {campoVisible("patente", familia) && (
+                  <Dato label="Patente" value={bien.patente} />
+                )}
+                {campoVisible("material", familia) && (
+                  <Dato label="Material" value={bien.material} />
+                )}
+                {campoVisible("medidas", familia) && (
+                  <Dato label="Medidas" value={bien.medidas} />
+                )}
+                {campoVisible("color", familia) && (
+                  <Dato label="Color" value={bien.color} />
+                )}
                 <Dato
                   label="Tipo de incorporación"
                   value={tiposIncorporacion[bien.tipoIncorporacion] ?? bien.tipoIncorporacion}
@@ -269,6 +300,78 @@ export function BienDetailPage() {
               )}
             </CardContent>
           </Card>
+
+          {familia === "INMUEBLE" && (
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Datos del inmueble
+                </Typography>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: {
+                      xs: "1fr 1fr",
+                      md: "repeat(3, 1fr)",
+                    },
+                    gap: 2,
+                  }}
+                >
+                  <Dato label="Tipo" value={bien.tipoInmueble} />
+                  <Dato label="Destino" value={bien.destinoInmueble} />
+                  <Dato
+                    label="Domicilio"
+                    value={bien.domicilioInmueble}
+                  />
+                  <Dato label="Localidad" value={bien.localidadInmueble} />
+                  <Dato label="Provincia" value={bien.provinciaInmueble} />
+                  <Dato
+                    label="Código postal"
+                    value={bien.codigoPostalInmueble}
+                  />
+                  <Dato
+                    label="Partida inmobiliaria"
+                    value={bien.partidaInmobiliaria}
+                  />
+                  <Dato
+                    label="Nomenclatura catastral"
+                    value={bien.nomenclaturaCatastral}
+                  />
+                  <Dato
+                    label="Matrícula"
+                    value={bien.matriculaInmobiliaria}
+                  />
+                  <Dato
+                    label="Superficie del terreno"
+                    value={
+                      bien.superficieTerreno !== null &&
+                      bien.superficieTerreno !== undefined
+                        ? `${formatoNumero(bien.superficieTerreno)} m²`
+                        : null
+                    }
+                  />
+                  <Dato
+                    label="Superficie cubierta"
+                    value={
+                      bien.superficieCubierta !== null &&
+                      bien.superficieCubierta !== undefined
+                        ? `${formatoNumero(bien.superficieCubierta)} m²`
+                        : null
+                    }
+                  />
+                  <Dato
+                    label="Fecha de escritura"
+                    value={formatoFecha(bien.fechaEscritura)}
+                  />
+                  <Dato
+                    label="N° de escritura"
+                    value={bien.numeroEscritura}
+                  />
+                  <Dato label="Notaría" value={bien.notaria} />
+                </Box>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardContent>

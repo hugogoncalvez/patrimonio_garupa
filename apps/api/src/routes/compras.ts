@@ -4,6 +4,7 @@ import { prisma } from "../lib/prisma.js";
 import { HttpError } from "../lib/http.js";
 import { registrarAuditoria } from "../lib/audit.js";
 import { generarActaRecepcionPdf } from "../lib/acta-recepcion-pdf.js";
+import { reservarCodigosBien } from "../lib/codigos-bien.js";
 import {
   fechaOpcional,
   idOpcional,
@@ -39,6 +40,7 @@ const compraInclude = {
           nombre: true,
           codigoCategoria: true,
           codigoCuenta: true,
+          familia: true,
         },
       },
       consumible: {
@@ -319,7 +321,9 @@ comprasRouter.get("/:id", async (req, res) => {
                   id: true,
                   descripcion: true,
                   tipo: true,
-                  rubro: { select: { id: true, nombre: true } },
+                  rubro: {
+                    select: { id: true, nombre: true, familia: true },
+                  },
                   consumible: { select: { id: true, nombre: true } },
                 },
               },
@@ -459,16 +463,42 @@ comprasRouter.post("/:id/actas", requireRole("CONTABLE", "PATRIMONIO"), async (r
       cantidades.set(detalle.id, acumulada);
     }
 
-    const estadoBien = await tx.estadoBien.findFirst({
-      where: { nombre: "En depósito", activo: true },
+    const estadosBien = await tx.estadoBien.findMany({
+      where: {
+        nombre: { in: ["En depósito", "En desuso"] },
+        activo: true,
+      },
+      select: { id: true, nombre: true },
     });
-    if (compra.detalles.some((detalle) => detalle.tipo === "INVENTARIABLE")) {
-      if (!estadoBien) {
-        throw new HttpError(
-          400,
-          'No existe el estado "En depósito" para dar de alta los bienes',
-        );
-      }
+    const estadoDeposito = estadosBien.find(
+      (estado) => estado.nombre === "En depósito",
+    );
+    const estadoDesuso = estadosBien.find(
+      (estado) => estado.nombre === "En desuso",
+    );
+
+    const detallesInventariables = compra.detalles.filter(
+      (detalle) => detalle.tipo === "INVENTARIABLE",
+    );
+    const hayInmuebles = detallesInventariables.some(
+      (detalle) => detalle.rubro?.familia === "INMUEBLE",
+    );
+    const hayOtrosBienes = detallesInventariables.some(
+      (detalle) => detalle.rubro?.familia !== "INMUEBLE",
+    );
+
+    if (hayOtrosBienes && !estadoDeposito) {
+      throw new HttpError(
+        400,
+        'No existe el estado "En depósito" para dar de alta los bienes',
+      );
+    }
+
+    if (hayInmuebles && !estadoDesuso) {
+      throw new HttpError(
+        400,
+        'No existe el estado "En desuso" para dar de alta los inmuebles',
+      );
     }
 
     const ejercicio = data.fecha.getUTCFullYear();
@@ -502,39 +532,19 @@ comprasRouter.post("/:id/actas", requireRole("CONTABLE", "PATRIMONIO"), async (r
       });
 
       if (detalle.tipo === "INVENTARIABLE") {
-        if (!detalle.rubro?.codigoCategoria) {
-          throw new HttpError(
-            400,
-            `El rubro "${detalle.rubro?.nombre ?? "seleccionado"}" no tiene código de categoría`,
-          );
-        }
+        const esInmueble = detalle.rubro?.familia === "INMUEBLE";
+        const estadoBien = esInmueble ? estadoDesuso : estadoDeposito;
+        const codigos = await reservarCodigosBien(
+          tx,
+          compra.organismo,
+          detalle.rubroId!,
+          item.cantidad,
+        );
 
-        const prefijo =
-          compra.organismo === "DE"
-            ? "1"
-            : "2";
-
-        for (let unidad = 0; unidad < item.cantidad; unidad += 1) {
-          const contadorBien = await tx.contadorBien.upsert({
-            where: {
-              organismo_rubroId: {
-                organismo: compra.organismo,
-                rubroId: detalle.rubroId!,
-              },
-            },
-            create: {
-              organismo: compra.organismo,
-              rubroId: detalle.rubroId!,
-              ultimoNumero: 1,
-            },
-            update: { ultimoNumero: { increment: 1 } },
-            select: { ultimoNumero: true },
-          });
-
-          const codigo = `${prefijo}-${detalle.rubro.codigoCategoria}-${contadorBien.ultimoNumero}`;
-
+        for (const codigo of codigos) {
           await tx.bien.create({
             data: {
+              organismo: compra.organismo,
               codigoInventario: codigo,
               descripcion: detalle.descripcion ?? "Bien sin descripción",
               rubroId: detalle.rubroId!,

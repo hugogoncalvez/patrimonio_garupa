@@ -11,13 +11,26 @@ import {
   textoOpcional,
 } from "../lib/zod.js";
 import { requireAuth } from "../middleware/auth.js";
+import {
+  generarCodigoBien,
+  interpretarCodigo,
+  previsualizarCodigoBien,
+  sincronizarContadorCodigoManual,
+} from "../lib/codigos-bien.js";
+import {
+  limpiarCamposNoVisibles,
+  validarCamposObligatoriosFamilia,
+  validarEstadoFamilia,
+} from "../lib/bienes-familia.js";
 
 export const bienesRouter = Router();
 
 bienesRouter.use(requireAuth);
 
 const bienInclude = {
-  rubro: { select: { id: true, nombre: true, codigoCuenta: true } },
+  rubro: {
+    select: { id: true, nombre: true, codigoCuenta: true, familia: true },
+  },
   estado: { select: { id: true, nombre: true } },
   area: {
     select: {
@@ -37,8 +50,43 @@ const usuarioMini = {
   select: { id: true, nombre: true, apellido: true },
 } as const;
 
-const bienSchema = z.object({
-  codigoInventario: z.string().trim().min(1, "El código es obligatorio").max(40),
+const organismoSchema = z.enum(["DE", "HCD"], {
+  error: "Seleccioná un organismo",
+});
+
+const situacionInmuebleSchema = z.preprocess(
+  (value) => (value === "" || value === undefined ? null : value),
+  z
+    .enum([
+      "OCUPADO",
+      "DESOCUPADO",
+      "ALQUILADO",
+      "CEDIDO_COMODATO",
+      "EN_LITIGIO",
+      "OTRO",
+    ])
+    .nullable()
+    .optional(),
+);
+
+const superficieOpcional = z.preprocess(
+  (value) =>
+    value === "" || value === null || value === undefined ? null : value,
+  z.coerce
+    .number()
+    .nonnegative("La superficie no puede ser negativa")
+    .nullable()
+    .optional(),
+);
+
+const bienBaseSchema = z.object({
+  organismo: organismoSchema,
+  codigoInventario: z
+    .string()
+    .trim()
+    .min(1, "El código es obligatorio")
+    .max(40)
+    .optional(),
   descripcion: z.string().trim().min(1, "La descripción es obligatoria").max(300),
   marca: textoOpcional(120),
   modelo: textoOpcional(120),
@@ -48,6 +96,21 @@ const bienSchema = z.object({
   material: textoOpcional(120),
   medidas: textoOpcional(120),
   color: textoOpcional(80),
+  situacionInmueble: situacionInmuebleSchema,
+  tipoInmueble: textoOpcional(80),
+  domicilioInmueble: textoOpcional(200),
+  localidadInmueble: textoOpcional(120),
+  provinciaInmueble: textoOpcional(120),
+  codigoPostalInmueble: textoOpcional(20),
+  partidaInmobiliaria: textoOpcional(80),
+  nomenclaturaCatastral: textoOpcional(120),
+  matriculaInmobiliaria: textoOpcional(80),
+  superficieTerreno: superficieOpcional,
+  superficieCubierta: superficieOpcional,
+  destinoInmueble: textoOpcional(120),
+  fechaEscritura: fechaOpcional,
+  numeroEscritura: textoOpcional(80),
+  notaria: textoOpcional(120),
   rubroId: z.coerce.number().int().positive(),
   estadoId: z.coerce.number().int().positive(),
   areaId: idOpcional,
@@ -58,6 +121,38 @@ const bienSchema = z.object({
   fechaAlta: z.coerce.date(),
   valorHistorico: numeroOpcional,
   observaciones: textoOpcional(2000),
+});
+
+const crearBienSchema = bienBaseSchema
+  .extend({
+    modoCodigo: z.enum(["AUTO", "MANUAL"]).optional(),
+  })
+  .superRefine((data, ctx) => {
+    const modo =
+      data.modoCodigo ?? (data.codigoInventario ? "MANUAL" : "AUTO");
+
+    if (modo === "MANUAL" && !data.codigoInventario) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["codigoInventario"],
+        message: "El código es obligatorio en modo manual",
+      });
+    }
+
+    if (modo === "AUTO" && data.codigoInventario) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["codigoInventario"],
+        message: "El código se genera automáticamente en modo automático",
+      });
+    }
+  });
+
+const actualizarBienSchema = bienBaseSchema.partial();
+
+const proximoCodigoQuery = z.object({
+  organismo: organismoSchema,
+  rubroId: z.coerce.number().int().positive(),
 });
 
 const listQuerySchema = z.object({
@@ -94,7 +189,32 @@ bienesRouter.get("/", async (req, res) => {
         { marca: { contains: query.q, mode: "insensitive" } },
         { modelo: { contains: query.q, mode: "insensitive" } },
         { numeroSerie: { contains: query.q, mode: "insensitive" } },
+        { numeroMotor: { contains: query.q, mode: "insensitive" } },
         { patente: { contains: query.q, mode: "insensitive" } },
+        {
+          domicilioInmueble: {
+            contains: query.q,
+            mode: "insensitive",
+          },
+        },
+        {
+          partidaInmobiliaria: {
+            contains: query.q,
+            mode: "insensitive",
+          },
+        },
+        {
+          nomenclaturaCatastral: {
+            contains: query.q,
+            mode: "insensitive",
+          },
+        },
+        {
+          matriculaInmobiliaria: {
+            contains: query.q,
+            mode: "insensitive",
+          },
+        },
       ],
     });
   }
@@ -135,12 +255,65 @@ bienesRouter.get("/", async (req, res) => {
   });
 });
 
+bienesRouter.get("/proximo-codigo", async (req, res) => {
+  const query = proximoCodigoQuery.parse(req.query);
+  const proximo = await previsualizarCodigoBien(
+    query.organismo,
+    query.rubroId,
+  );
+
+  res.json(proximo);
+});
+
 bienesRouter.post("/", async (req, res) => {
-  const data = bienSchema.parse(req.body);
+  const data = crearBienSchema.parse(req.body);
+  const {
+    modoCodigo,
+    codigoInventario,
+    organismo,
+    ...datos
+  } = data;
+  const modo = modoCodigo ?? (codigoInventario ? "MANUAL" : "AUTO");
+
+  const rubro = await prisma.rubro.findUnique({
+    where: { id: datos.rubroId },
+    select: { familia: true },
+  });
+
+  if (!rubro) {
+    throw new HttpError(404, "Rubro no encontrado");
+  }
+
+  validarCamposObligatoriosFamilia(rubro.familia, data);
+  await validarEstadoFamilia(prisma, rubro.familia, datos.estadoId);
+  const datosBien = limpiarCamposNoVisibles(rubro.familia, { ...datos });
 
   const creado = await prisma.$transaction(async (tx) => {
+    let codigo: string;
+
+    if (modo === "AUTO") {
+      codigo = await generarCodigoBien(tx, organismo, datosBien.rubroId);
+    } else {
+      if (!codigoInventario) {
+        throw new HttpError(400, "El código es obligatorio en modo manual");
+      }
+
+      codigo = codigoInventario;
+      await sincronizarContadorCodigoManual(
+        tx,
+        codigo,
+        organismo,
+        datosBien.rubroId,
+      );
+    }
+
     const bien = await tx.bien.create({
-      data: { ...data, creadoPorId: req.usuario!.id },
+      data: {
+        ...datosBien,
+        organismo,
+        codigoInventario: codigo,
+        creadoPorId: req.usuario!.id,
+      },
       include: bienInclude,
     });
 
@@ -235,7 +408,8 @@ bienesRouter.get("/:id", async (req, res) => {
 
 bienesRouter.patch("/:id", async (req, res) => {
   const id = idParam.parse(req.params.id);
-  const data = bienSchema.partial().parse(req.body);
+  const data = actualizarBienSchema.parse(req.body);
+  const { codigoInventario, ...cambios } = data;
 
   const anterior = await prisma.bien.findUnique({
     where: { id },
@@ -246,10 +420,68 @@ bienesRouter.patch("/:id", async (req, res) => {
     throw new HttpError(404, "Bien no encontrado");
   }
 
+  if (
+    codigoInventario !== undefined &&
+    codigoInventario !== anterior.codigoInventario
+  ) {
+    throw new HttpError(
+      400,
+      "El código de inventario no se puede modificar",
+    );
+  }
+
+  if (
+    cambios.organismo !== undefined &&
+    anterior.organismo &&
+    cambios.organismo !== anterior.organismo
+  ) {
+    throw new HttpError(
+      400,
+      "El organismo no se puede modificar una vez asignado",
+    );
+  }
+
+  if (cambios.organismo && !anterior.organismo) {
+    const interpretado = interpretarCodigo(anterior.codigoInventario);
+
+    if (
+      interpretado &&
+      interpretado.organismo !== cambios.organismo
+    ) {
+      throw new HttpError(
+        400,
+        "El organismo no coincide con el prefijo del código de inventario",
+      );
+    }
+  }
+
+  let familia = anterior.rubro?.familia ?? "OTRO";
+
+  if (
+    cambios.rubroId !== undefined &&
+    cambios.rubroId !== anterior.rubroId
+  ) {
+    const rubro = await prisma.rubro.findUnique({
+      where: { id: cambios.rubroId },
+      select: { familia: true },
+    });
+
+    if (!rubro) {
+      throw new HttpError(404, "Rubro no encontrado");
+    }
+
+    familia = rubro.familia;
+  }
+
+  const datosResultantes = { ...anterior, ...cambios };
+  validarCamposObligatoriosFamilia(familia, datosResultantes);
+  await validarEstadoFamilia(prisma, familia, datosResultantes.estadoId);
+  const cambiosLimpios = limpiarCamposNoVisibles(familia, { ...cambios });
+
   const actualizado = await prisma.$transaction(async (tx) => {
     const bien = await tx.bien.update({
       where: { id },
-      data,
+      data: cambiosLimpios,
       include: bienInclude,
     });
 

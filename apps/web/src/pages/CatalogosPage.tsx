@@ -35,10 +35,12 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import { api } from "../lib/api";
 import { ErrorCarga } from "../components/ErrorCarga";
 import { alertaError, alertaExito, confirmar } from "../lib/errors";
+import { FAMILIAS_BIEN, etiquetaFamilia } from "../lib/bienes";
 import type {
   Area,
   CategoriaConsumible,
   EstadoBien,
+  FamiliaBien,
   Persona,
   Rubro,
 } from "../types";
@@ -70,6 +72,7 @@ function RubrosTab() {
     codigoInterno: "",
     codigoCuenta: "",
     codigoCategoria: "",
+    familia: "OTRO" as FamiliaBien,
     activo: true,
   });
 
@@ -87,6 +90,7 @@ function RubrosTab() {
         codigoCategoria: form.codigoCategoria
           ? Number(form.codigoCategoria)
           : null,
+        familia: form.familia,
         activo: form.activo,
       };
       return editando
@@ -119,6 +123,7 @@ function RubrosTab() {
       codigoInterno: "",
       codigoCuenta: "",
       codigoCategoria: "",
+      familia: "OTRO",
       activo: true,
     });
     setDialogo(true);
@@ -133,6 +138,7 @@ function RubrosTab() {
       codigoCategoria: rubro.codigoCategoria
         ? String(rubro.codigoCategoria)
         : "",
+      familia: rubro.familia,
       activo: rubro.activo,
     });
     setDialogo(true);
@@ -148,6 +154,7 @@ function RubrosTab() {
           <TableHead>
             <TableRow>
               <TableCell>Nombre</TableCell>
+              <TableCell>Familia</TableCell>
               <TableCell>Categoría</TableCell>
               <TableCell>Código interno</TableCell>
               <TableCell>Código contable</TableCell>
@@ -159,7 +166,7 @@ function RubrosTab() {
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 5 }}>
+                <TableCell colSpan={8} align="center" sx={{ py: 5 }}>
                   <CircularProgress size={26} />
                 </TableCell>
               </TableRow>
@@ -167,7 +174,7 @@ function RubrosTab() {
 
             {error && (
               <TableRow>
-                <TableCell colSpan={7} sx={{ py: 2 }}>
+                <TableCell colSpan={8} sx={{ py: 2 }}>
                   <ErrorCarga
                     error={error}
                     onRetry={() => void refetch()}
@@ -179,6 +186,7 @@ function RubrosTab() {
             {data?.map((rubro) => (
               <TableRow key={rubro.id} hover>
                 <TableCell>{rubro.nombre}</TableCell>
+                <TableCell>{etiquetaFamilia(rubro.familia)}</TableCell>
                 <TableCell>{rubro.codigoCategoria ?? "-"}</TableCell>
                 <TableCell>{rubro.codigoInterno ?? "-"}</TableCell>
                 <TableCell>{rubro.codigoCuenta ?? "-"}</TableCell>
@@ -223,6 +231,25 @@ function RubrosTab() {
               onChange={(event) => setForm({ ...form, nombre: event.target.value })}
               required
             />
+            <TextField
+              select
+              label="Familia"
+              value={form.familia}
+              onChange={(event) =>
+                setForm({
+                  ...form,
+                  familia: event.target.value as FamiliaBien,
+                })
+              }
+              helperText="Define qué campos se muestran en el alta del bien."
+              required
+            >
+              {FAMILIAS_BIEN.map((familia) => (
+                <MenuItem key={familia.value} value={familia.value}>
+                  {familia.label}
+                </MenuItem>
+              ))}
+            </TextField>
             <TextField
               label="Categoría"
               type="number"
@@ -750,7 +777,7 @@ function AreasTab() {
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 5 }}>
+                <TableCell colSpan={8} align="center" sx={{ py: 5 }}>
                   <CircularProgress size={26} />
                 </TableCell>
               </TableRow>
@@ -758,7 +785,7 @@ function AreasTab() {
 
             {error && (
               <TableRow>
-                <TableCell colSpan={7} sx={{ py: 2 }}>
+                <TableCell colSpan={8} sx={{ py: 2 }}>
                   <ErrorCarga
                     error={error}
                     onRetry={() => void refetch()}
@@ -986,7 +1013,7 @@ function PersonasTab() {
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 5 }}>
+                <TableCell colSpan={8} align="center" sx={{ py: 5 }}>
                   <CircularProgress size={26} />
                 </TableCell>
               </TableRow>
@@ -994,7 +1021,7 @@ function PersonasTab() {
 
             {error && (
               <TableRow>
-                <TableCell colSpan={7} sx={{ py: 2 }}>
+                <TableCell colSpan={8} sx={{ py: 2 }}>
                   <ErrorCarga
                     error={error}
                     onRetry={() => void refetch()}

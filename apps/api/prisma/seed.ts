@@ -1,45 +1,61 @@
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { prisma } from "../src/lib/prisma.js";
+import type { FamiliaBien } from "../src/generated/prisma/client.js";
 
-const rubros = [
+type RubroSeed = {
+  nombre: string;
+  familia: FamiliaBien;
+  codigoInterno: string;
+  codigoCuenta?: string;
+  codigoCategoria: number;
+};
+
+const rubros: RubroSeed[] = [
   {
     nombre: "INMUEBLES",
+    familia: "INMUEBLE",
     codigoInterno: "INM",
     codigoCuenta: "5021008",
     codigoCategoria: 1,
   },
   {
     nombre: "MUEBLES Y UTILES",
+    familia: "MUEBLE",
     codigoInterno: "MUE",
     codigoCuenta: "5021002",
     codigoCategoria: 2,
   },
   {
     nombre: "MAQUINAS MOTORES AP Y HERRAMIENTAS",
+    familia: "MAQUINARIA",
     codigoInterno: "MAQ",
     codigoCuenta: "5021001",
     codigoCategoria: 3,
   },
   {
     nombre: "MEDIOS DE TRANSPORTE",
+    familia: "VEHICULO",
     codigoInterno: "TRA",
     codigoCuenta: "5021005",
     codigoCategoria: 4,
   },
   {
     nombre: "MAQUINAS VIALES",
+    familia: "MAQUINARIA_VIAL",
     codigoInterno: "MVI",
     codigoCuenta: "5021009",
     codigoCategoria: 5,
   },
   {
     nombre: "BIBLIOTECAS COLECC. Y AFINES",
+    familia: "BIBLIOTECA",
     codigoInterno: "BIB",
     codigoCategoria: 6,
   },
   {
     nombre: "OTROS BIENES",
+    familia: "OTRO",
     codigoInterno: "OTR",
     codigoCuenta: "5021010",
     codigoCategoria: 7,
@@ -52,6 +68,7 @@ const estados = [
   "En depósito",
   "Prestado",
   "Dado de baja",
+  "En desuso",
 ];
 
 const categoriasConsumibles = [
@@ -90,6 +107,7 @@ async function main() {
         nombre: rubro.nombre,
         codigoInterno: rubro.codigoInterno,
         codigoCuenta: rubro.codigoCuenta,
+        familia: rubro.familia,
       },
       create: rubro,
     });

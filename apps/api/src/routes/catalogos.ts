@@ -22,11 +22,22 @@ const codigoCategoriaOpcional = z.preprocess(
   z.coerce.number().int().min(1).max(7).nullable().optional(),
 );
 
+const familiaBienSchema = z.enum([
+  "INMUEBLE",
+  "MUEBLE",
+  "MAQUINARIA",
+  "VEHICULO",
+  "MAQUINARIA_VIAL",
+  "BIBLIOTECA",
+  "OTRO",
+]);
+
 const rubroSchema = z.object({
   nombre: z.string().trim().min(1).max(120),
   codigoInterno: textoOpcional(30),
   codigoCuenta: textoOpcional(30),
   codigoCategoria: codigoCategoriaOpcional,
+  familia: familiaBienSchema.optional(),
   activo: z.boolean().optional(),
 });
 
@@ -68,10 +79,28 @@ catalogosRouter.get("/tipos", (_req, res) => {
     tiposDocumento: ["FACTURA", "REMITO", "ACTA", "RESOLUCION", "OTRO"],
     estadosBienSugeridos: [
       "En uso",
+      "En desuso",
       "En reparación",
       "En depósito",
       "Prestado",
       "Dado de baja",
+    ],
+    familiasBien: [
+      "INMUEBLE",
+      "MUEBLE",
+      "MAQUINARIA",
+      "VEHICULO",
+      "MAQUINARIA_VIAL",
+      "BIBLIOTECA",
+      "OTRO",
+    ],
+    situacionesInmueble: [
+      "OCUPADO",
+      "DESOCUPADO",
+      "ALQUILADO",
+      "CEDIDO_COMODATO",
+      "EN_LITIGIO",
+      "OTRO",
     ],
   });
 });

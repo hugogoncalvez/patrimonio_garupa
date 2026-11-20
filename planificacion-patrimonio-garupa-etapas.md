@@ -112,8 +112,8 @@ Puede todo:
 
 ### 4.2 Catálogos operativos
 
-- **Rubros:** nombre, código interno y código de cuenta contable opcional para Etapa 2.
-- **Estados del bien:** en uso, en reparación, en depósito, dado de baja, etc.
+- **Rubros:** nombre, familia del bien, código interno y código de cuenta contable opcional para Etapa 2.
+- **Estados del bien:** en uso, en desuso, en reparación, en depósito, prestado, dado de baja.
 - **Áreas/dependencias:** nombre, dirección, responsable.
 - **Personas:** nombre, apellido, DNI, cargo, área.
 - **Tipos de incorporación:** compra, donación, transferencia, préstamo, etc.
@@ -122,10 +122,11 @@ Puede todo:
 
 Campos mínimos:
 
+- Organismo (Departamento Ejecutivo o Honorable Concejo Deliberante).
 - Código de inventario único y no reutilizable, visible en el bien.
 - Descripción.
-- Marca, modelo, número de serie.
-- Número de motor y patente para vehículos.
+- Marca, modelo y número de serie (según familia del rubro).
+- Número de motor y patente para vehículos y máquinas viales.
 - Material, medidas y color.
 - Rubro.
 - Estado.
@@ -140,12 +141,20 @@ Campos mínimos:
 Funcionalidades:
 
 - Alta, edición y baja lógica.
-- Generación de código único.
+- Generación automática del código único por organismo y rubro, con vista previa antes de guardar.
+- Carga manual explícita de códigos para bienes históricos, sin reutilizar códigos existentes.
+- Código inmutable después del alta; cualquier corrección administrativa futura debe quedar auditada.
 - Generación e impresión de etiqueta QR.
 - Historial de custodias.
 - Historial de ubicaciones.
 - Búsqueda por código, descripción, rubro, área, estado y responsable.
 - Ficha completa del bien.
+
+Cada rubro tiene una familia (inmueble, mueble, maquinaria, vehículo, máquina vial, biblioteca u otro) que define qué campos se muestran. Marca, modelo y número de serie son obligatorios en máquinas, vehículos y máquinas viales; la patente se exige en vehículos y máquinas viales. No se exigen en muebles, inmuebles ni bibliotecas.
+
+Los inmuebles incorporan situación (ocupado, desocupado, alquilado, cedido/comodato, en litigio), tipo, domicilio, localidad/provincia/código postal, partida y nomenclatura catastral, matrícula, superficies, destino y datos de escritura. Por ahora estos campos son opcionales. Para inmuebles se usan los estados En uso, En desuso, En reparación y Dado de baja; En depósito y Prestado quedan ocultos.
+
+Formato de código implementado: `1-<código de categoría>-<correlativo>` para Departamento Ejecutivo y `2-<código de categoría>-<correlativo>` para Honorable Concejo Deliberante. El correlativo es independiente por organismo y rubro, no se reutiliza y la vista previa no consume el número; la asignación definitiva se hace al guardar.
 
 Alternativa evaluada para el QR (no implementada):
 
@@ -451,7 +460,7 @@ Este documento cambia únicamente el orden de implementación:
 ## 12. Próximos pasos
 
 1. Validar este alcance con el Encargado de Patrimonio y Contaduría.
-2. Definir el formato del código de inventario.
+2. Validar con Contaduría el formato implementado (`1/2-categoría-correlativo`) y los datos iniciales.
 3. Relevar áreas, personas y rubros iniciales.
 4. Confirmar si Patrimonio debe ver el valor histórico del bien.
 5. Arrancar la Fase 1 de Etapa 1.

@@ -17,6 +17,25 @@ enum Organismo {
   HCD
 }
 
+enum FamiliaBien {
+  INMUEBLE
+  MUEBLE
+  MAQUINARIA
+  VEHICULO
+  MAQUINARIA_VIAL
+  BIBLIOTECA
+  OTRO
+}
+
+enum SituacionInmueble {
+  OCUPADO
+  DESOCUPADO
+  ALQUILADO
+  CEDIDO_COMODATO
+  EN_LITIGIO
+  OTRO
+}
+
 enum TipoCompraDetalle {
   INVENTARIABLE
   CONSUMIBLE
@@ -144,12 +163,13 @@ model Persona {
 }
 
 model Rubro {
-  id              Int     @id @default(autoincrement())
-  nombre          String  @unique @db.VarChar(120)
-  codigoInterno   String? @unique @db.VarChar(30)
-  codigoCuenta    String? @db.VarChar(30)
-  codigoCategoria Int?    @unique
-  activo          Boolean @default(true)
+  id              Int         @id @default(autoincrement())
+  nombre          String      @unique @db.VarChar(120)
+  codigoInterno   String?     @unique @db.VarChar(30)
+  codigoCuenta    String?     @db.VarChar(30)
+  codigoCategoria Int?        @unique
+  familia         FamiliaBien @default(OTRO)
+  activo          Boolean     @default(true)
 
   bienes         Bien[]
   compraDetalles CompraDetalle[]
@@ -157,6 +177,8 @@ model Rubro {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([familia])
 }
 
 model EstadoBien {
@@ -171,8 +193,9 @@ model EstadoBien {
 }
 
 model Bien {
-  id                   Int     @id @default(autoincrement())
-  codigoInventario     String  @unique @db.VarChar(40)
+  id                   Int        @id @default(autoincrement())
+  organismo            Organismo?
+  codigoInventario     String     @unique @db.VarChar(40)
   descripcion          String  @db.VarChar(300)
   marca                String? @db.VarChar(120)
   modelo               String? @db.VarChar(120)
@@ -182,6 +205,22 @@ model Bien {
   material             String? @db.VarChar(120)
   medidas              String? @db.VarChar(120)
   color                String? @db.VarChar(80)
+
+  situacionInmueble       SituacionInmueble?
+  tipoInmueble            String?  @db.VarChar(80)
+  domicilioInmueble       String?  @db.VarChar(200)
+  localidadInmueble       String?  @db.VarChar(120)
+  provinciaInmueble       String?  @db.VarChar(120)
+  codigoPostalInmueble    String?  @db.VarChar(20)
+  partidaInmobiliaria     String?  @db.VarChar(80)
+  nomenclaturaCatastral   String?  @db.VarChar(120)
+  matriculaInmobiliaria   String?  @db.VarChar(80)
+  superficieTerreno       Decimal? @db.Decimal(12, 2)
+  superficieCubierta      Decimal? @db.Decimal(12, 2)
+  destinoInmueble         String?  @db.VarChar(120)
+  fechaEscritura          DateTime? @db.Date
+  numeroEscritura         String?  @db.VarChar(80)
+  notaria                 String?  @db.VarChar(120)
 
   rubroId Int
   rubro   Rubro @relation(fields: [rubroId], references: [id], onDelete: Restrict)
@@ -226,6 +265,7 @@ model Bien {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([organismo, rubroId])
   @@index([rubroId])
   @@index([estadoId])
   @@index([areaId])

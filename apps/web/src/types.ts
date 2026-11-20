@@ -1,5 +1,22 @@
 export type Rol = "CONTABLE" | "PATRIMONIO";
 
+export type FamiliaBien =
+  | "INMUEBLE"
+  | "MUEBLE"
+  | "MAQUINARIA"
+  | "VEHICULO"
+  | "MAQUINARIA_VIAL"
+  | "BIBLIOTECA"
+  | "OTRO";
+
+export type SituacionInmueble =
+  | "OCUPADO"
+  | "DESOCUPADO"
+  | "ALQUILADO"
+  | "CEDIDO_COMODATO"
+  | "EN_LITIGIO"
+  | "OTRO";
+
 export interface Usuario {
   id: number;
   nombre: string;
@@ -34,6 +51,7 @@ export interface Rubro {
   codigoInterno?: string | null;
   codigoCuenta?: string | null;
   codigoCategoria?: number | null;
+  familia: FamiliaBien;
   activo: boolean;
   _count?: { bienes: number };
 }
@@ -74,6 +92,7 @@ export interface Persona {
 
 export interface Bien {
   id: number;
+  organismo?: Organismo | null;
   codigoInventario: string;
   descripcion: string;
   marca?: string | null;
@@ -84,6 +103,21 @@ export interface Bien {
   material?: string | null;
   medidas?: string | null;
   color?: string | null;
+  situacionInmueble?: SituacionInmueble | null;
+  tipoInmueble?: string | null;
+  domicilioInmueble?: string | null;
+  localidadInmueble?: string | null;
+  provinciaInmueble?: string | null;
+  codigoPostalInmueble?: string | null;
+  partidaInmobiliaria?: string | null;
+  nomenclaturaCatastral?: string | null;
+  matriculaInmobiliaria?: string | null;
+  superficieTerreno?: string | number | null;
+  superficieCubierta?: string | number | null;
+  destinoInmueble?: string | null;
+  fechaEscritura?: string | null;
+  numeroEscritura?: string | null;
+  notaria?: string | null;
   rubroId: number;
   estadoId: number;
   areaId?: number | null;
@@ -101,7 +135,12 @@ export interface Bien {
   fechaResolucionBaja?: string | null;
   valorBaja?: string | number | null;
   ejercicioAlta?: number | null;
-  rubro?: { id: number; nombre: string; codigoCuenta?: string | null };
+  rubro?: {
+    id: number;
+    nombre: string;
+    codigoCuenta?: string | null;
+    familia?: FamiliaBien;
+  };
   estado?: { id: number; nombre: string };
   area?: {
     id: number;
@@ -257,6 +296,7 @@ export interface CompraDetalle {
     nombre: string;
     codigoCategoria?: number | null;
     codigoCuenta?: string | null;
+    familia?: FamiliaBien;
   } | null;
   consumibleId?: number | null;
   consumible?: { id: number; nombre: string; unidadMedida: string } | null;
