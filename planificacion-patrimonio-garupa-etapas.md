@@ -229,7 +229,7 @@ No incluye en Etapa 1:
 - Historial por bien.
 - Observaciones y fecha de cada movimiento.
 
-Los PDF de actas y dispositivos de designación quedan para Etapa 2, salvo que se decida incorporar una versión simple en Etapa 1.
+Las actas de entrega y recepción ya cuentan con PDF operativo. Los dispositivos de designación quedan para Etapa 2.
 
 ### 4.7 Dashboard y reportes operativos
 
@@ -251,7 +251,7 @@ Reportes operativos:
 - Movimientos de stock por área.
 - Compras/ingresos del período.
 
-Sin formato oficial del HTC en Etapa 1.
+Los cinco reportes se pueden consultar en pantalla y generar en PDF operativo con encabezado institucional, filtros aplicados, fecha de emisión, totales y numeración de páginas. Sin formato oficial del HTC en Etapa 1.
 
 ### 4.8 Auditoría
 

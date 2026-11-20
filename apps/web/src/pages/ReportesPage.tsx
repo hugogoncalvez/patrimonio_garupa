@@ -23,9 +23,11 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import DownloadIcon from "@mui/icons-material/Download";
 import PrintIcon from "@mui/icons-material/Print";
 import { api } from "../lib/api";
 import { ErrorCarga } from "../components/ErrorCarga";
+import { alertaError } from "../lib/errors";
 import {
   formatoFecha,
   formatoFechaHora,
@@ -53,6 +55,29 @@ const estadosCompra: Record<
   RECIBIDA_PARCIAL: { label: "Parcial", color: "warning" },
   RECIBIDA: { label: "Recibida", color: "success" },
 };
+
+const reportesPdf = [
+  {
+    ruta: "/reportes/bienes-por-area.pdf",
+    nombre: "reporte-bienes-por-area",
+  },
+  {
+    ruta: "/reportes/bienes-por-responsable.pdf",
+    nombre: "reporte-bienes-por-responsable",
+  },
+  {
+    ruta: "/reportes/consumibles-stock.pdf",
+    nombre: "reporte-stock-consumibles",
+  },
+  {
+    ruta: "/reportes/movimientos-stock.pdf",
+    nombre: "reporte-movimientos-stock",
+  },
+  {
+    ruta: "/reportes/compras-periodo.pdf",
+    nombre: "reporte-compras-periodo",
+  },
+] as const;
 
 function totalCompra(compra: Compra) {
   return compra.detalles.reduce(
@@ -92,6 +117,9 @@ export function ReportesPage() {
   const [tipo, setTipo] = useState("");
   const [categoriaId, setCategoriaId] = useState("");
   const [soloStockBajo, setSoloStockBajo] = useState(false);
+  const [generandoPdf, setGenerandoPdf] = useState<"ver" | "descargar" | null>(
+    null,
+  );
 
   const { data: areas } = useQuery<Area[]>({
     queryKey: ["areas"],
@@ -171,6 +199,71 @@ export function ReportesPage() {
 
   const consultaActiva = [reporteArea, reporteResponsable, reporteStock, reporteMovimientos, reporteCompras][tab];
 
+  const obtenerPdf = async (descargar: boolean) => {
+    if (generandoPdf) return;
+
+    setGenerandoPdf(descargar ? "descargar" : "ver");
+    const ventana = descargar ? null : window.open("", "_blank");
+
+    try {
+      const params: Record<string, string | number> = {};
+
+      if (tab <= 1) {
+        if (areaId) params.areaId = areaId;
+        if (responsableId) params.responsableId = responsableId;
+      }
+
+      if (tab === 2) {
+        if (categoriaId) params.categoriaId = categoriaId;
+        if (soloStockBajo) params.soloStockBajo = "true";
+      }
+
+      if (tab >= 3) {
+        params.desde = desde;
+        params.hasta = hasta;
+        if (areaId) params.areaId = areaId;
+        if (tab === 3 && tipo) params.tipo = tipo;
+      }
+
+      if (descargar) params.descargar = "1";
+
+      const response = await api.get(reportesPdf[tab].ruta, {
+        params,
+        responseType: "blob",
+      });
+
+      const url = URL.createObjectURL(
+        new Blob([response.data], { type: "application/pdf" }),
+      );
+
+      if (descargar) {
+        const enlace = document.createElement("a");
+        enlace.href = url;
+        enlace.download = `${reportesPdf[tab].nombre}-${hoy}.pdf`;
+        document.body.appendChild(enlace);
+        enlace.click();
+        enlace.remove();
+      } else if (ventana) {
+        ventana.location.href = url;
+      } else {
+        const enlace = document.createElement("a");
+        enlace.href = url;
+        enlace.target = "_blank";
+        enlace.rel = "noopener noreferrer";
+        document.body.appendChild(enlace);
+        enlace.click();
+        enlace.remove();
+      }
+
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (error) {
+      ventana?.close();
+      await alertaError(error);
+    } finally {
+      setGenerandoPdf(null);
+    }
+  };
+
   return (
     <Stack spacing={2.5}>
       <Box
@@ -188,13 +281,36 @@ export function ReportesPage() {
             Información operativa de bienes, consumibles, movimientos y compras.
           </Typography>
         </Box>
-        <Button
-          variant="outlined"
-          startIcon={<PrintIcon />}
-          onClick={() => window.print()}
-        >
-          Imprimir
-        </Button>
+        <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
+          <Button
+            variant="outlined"
+            startIcon={
+              generandoPdf === "ver" ? (
+                <CircularProgress size={18} color="inherit" />
+              ) : (
+                <PrintIcon />
+              )
+            }
+            onClick={() => void obtenerPdf(false)}
+            disabled={generandoPdf !== null}
+          >
+            {generandoPdf === "ver" ? "Generando..." : "Ver / Imprimir"}
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={
+              generandoPdf === "descargar" ? (
+                <CircularProgress size={18} color="inherit" />
+              ) : (
+                <DownloadIcon />
+              )
+            }
+            onClick={() => void obtenerPdf(true)}
+            disabled={generandoPdf !== null}
+          >
+            {generandoPdf === "descargar" ? "Generando..." : "Descargar PDF"}
+          </Button>
+        </Stack>
       </Box>
 
       <Card>
