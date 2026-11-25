@@ -559,7 +559,11 @@ export function BienFormPage() {
 
       {error && <Alert severity="error">{error}</Alert>}
 
-      <Box component="form" onSubmit={handleSubmit((values) => guardar.mutate(values))}>
+      <Box
+        component="form"
+        noValidate
+        onSubmit={handleSubmit((values) => guardar.mutate(values))}
+      >
         <Stack spacing={2.5}>
           <Card>
             <CardContent>
@@ -876,7 +880,7 @@ export function BienFormPage() {
                     {...register("superficieTerreno")}
                     error={Boolean(errors.superficieTerreno)}
                     helperText={errors.superficieTerreno?.message}
-                    slotProps={{ htmlInput: { step: "0.01", min: 0 } }}
+                    slotProps={{ htmlInput: { step: 1, min: 0 } }}
                   />
                   <TextField
                     label="Superficie cubierta (m²)"
@@ -884,7 +888,7 @@ export function BienFormPage() {
                     {...register("superficieCubierta")}
                     error={Boolean(errors.superficieCubierta)}
                     helperText={errors.superficieCubierta?.message}
-                    slotProps={{ htmlInput: { step: "0.01", min: 0 } }}
+                    slotProps={{ htmlInput: { step: 1, min: 0 } }}
                   />
                   <TextField
                     label="Destino"
@@ -954,7 +958,7 @@ export function BienFormPage() {
                   label="Valor histórico"
                   type="number"
                   {...register("valorHistorico")}
-                  slotProps={{ htmlInput: { step: "0.01", min: 0 } }}
+                  slotProps={{ htmlInput: { step: 1, min: 0 } }}
                 />
                 <Controller
                   name="areaId"

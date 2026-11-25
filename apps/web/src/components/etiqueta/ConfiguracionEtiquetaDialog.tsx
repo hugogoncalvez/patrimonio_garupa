@@ -108,7 +108,7 @@ export function ConfiguracionEtiquetaDialog({
               onChange={(event) =>
                 actualizar("hojaAnchoMm", event.target.value)
               }
-              slotProps={{ htmlInput: { min: 50, step: 0.1 } }}
+              slotProps={{ htmlInput: { min: 50, step: 1 } }}
             />
             <TextField
               size="small"
@@ -118,7 +118,7 @@ export function ConfiguracionEtiquetaDialog({
               onChange={(event) =>
                 actualizar("hojaAltoMm", event.target.value)
               }
-              slotProps={{ htmlInput: { min: 50, step: 0.1 } }}
+              slotProps={{ htmlInput: { min: 50, step: 1 } }}
             />
             <TextField
               size="small"
@@ -144,7 +144,7 @@ export function ConfiguracionEtiquetaDialog({
               onChange={(event) =>
                 actualizar("etiquetaAnchoMm", event.target.value)
               }
-              slotProps={{ htmlInput: { min: 5, step: 0.1 } }}
+              slotProps={{ htmlInput: { min: 5, step: 1 } }}
             />
             <TextField
               size="small"
@@ -154,7 +154,7 @@ export function ConfiguracionEtiquetaDialog({
               onChange={(event) =>
                 actualizar("etiquetaAltoMm", event.target.value)
               }
-              slotProps={{ htmlInput: { min: 5, step: 0.1 } }}
+              slotProps={{ htmlInput: { min: 5, step: 1 } }}
             />
             <TextField
               size="small"
@@ -164,7 +164,7 @@ export function ConfiguracionEtiquetaDialog({
               onChange={(event) =>
                 actualizar("margenSuperiorMm", event.target.value)
               }
-              slotProps={{ htmlInput: { min: 0, step: 0.1 } }}
+              slotProps={{ htmlInput: { min: 0, step: 1 } }}
             />
             <TextField
               size="small"
@@ -174,7 +174,7 @@ export function ConfiguracionEtiquetaDialog({
               onChange={(event) =>
                 actualizar("margenIzquierdoMm", event.target.value)
               }
-              slotProps={{ htmlInput: { min: 0, step: 0.1 } }}
+              slotProps={{ htmlInput: { min: 0, step: 1 } }}
             />
             <TextField
               size="small"
@@ -184,7 +184,7 @@ export function ConfiguracionEtiquetaDialog({
               onChange={(event) =>
                 actualizar("separacionXMm", event.target.value)
               }
-              slotProps={{ htmlInput: { min: 0, step: 0.1 } }}
+              slotProps={{ htmlInput: { min: 0, step: 1 } }}
             />
             <TextField
               size="small"
@@ -194,7 +194,7 @@ export function ConfiguracionEtiquetaDialog({
               onChange={(event) =>
                 actualizar("separacionYMm", event.target.value)
               }
-              slotProps={{ htmlInput: { min: 0, step: 0.1 } }}
+              slotProps={{ htmlInput: { min: 0, step: 1 } }}
             />
             <TextField
               size="small"
@@ -202,7 +202,7 @@ export function ConfiguracionEtiquetaDialog({
               label="Ajuste fino X (mm)"
               value={form.ajusteXMm}
               onChange={(event) => actualizar("ajusteXMm", event.target.value)}
-              slotProps={{ htmlInput: { step: 0.1 } }}
+              slotProps={{ htmlInput: { step: 1 } }}
             />
             <TextField
               size="small"
@@ -210,7 +210,7 @@ export function ConfiguracionEtiquetaDialog({
               label="Ajuste fino Y (mm)"
               value={form.ajusteYMm}
               onChange={(event) => actualizar("ajusteYMm", event.target.value)}
-              slotProps={{ htmlInput: { step: 0.1 } }}
+              slotProps={{ htmlInput: { step: 1 } }}
             />
             <TextField
               size="small"
@@ -220,7 +220,7 @@ export function ConfiguracionEtiquetaDialog({
               onChange={(event) =>
                 actualizar("qrTamanoMm", event.target.value)
               }
-              slotProps={{ htmlInput: { min: 5, step: 0.1 } }}
+              slotProps={{ htmlInput: { min: 5, step: 1 } }}
             />
           </Box>
 

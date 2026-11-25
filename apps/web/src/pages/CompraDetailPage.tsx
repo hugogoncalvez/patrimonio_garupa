@@ -585,10 +585,7 @@ export function CompraDetailPage() {
                               htmlInput: {
                                 min: 0,
                                 max: restante,
-                                step:
-                                  detalle.tipo === "INVENTARIABLE"
-                                    ? 1
-                                    : "0.001",
+                                step: 1,
                               },
                             }}
                           />

@@ -453,7 +453,7 @@ export function ConsumiblesPage() {
                   onChange={(event) =>
                     setForm({ ...form, stockActual: event.target.value })
                   }
-                  slotProps={{ htmlInput: { min: 0, step: "0.001" } }}
+                  slotProps={{ htmlInput: { min: 0, step: 1 } }}
                   fullWidth
                 />
               )}
@@ -464,7 +464,7 @@ export function ConsumiblesPage() {
                 onChange={(event) =>
                   setForm({ ...form, stockMinimo: event.target.value })
                 }
-                slotProps={{ htmlInput: { min: 0, step: "0.001" } }}
+                slotProps={{ htmlInput: { min: 0, step: 1 } }}
                 fullWidth
               />
             </Stack>
@@ -542,7 +542,7 @@ export function ConsumiblesPage() {
                   ? "Usá negativo para descontar stock"
                   : "La cantidad debe ser mayor a cero"
               }
-              slotProps={{ htmlInput: { step: "0.001" } }}
+              slotProps={{ htmlInput: { step: 1 } }}
             />
             <TextField
               label="Observaciones"

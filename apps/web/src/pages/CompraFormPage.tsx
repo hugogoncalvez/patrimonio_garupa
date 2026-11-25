@@ -760,8 +760,8 @@ export function CompraFormPage() {
                       }
                       slotProps={{
                         htmlInput: {
-                          min: detalle.tipo === "INVENTARIABLE" ? 1 : 0.001,
-                          step: detalle.tipo === "INVENTARIABLE" ? 1 : "0.001",
+                          min: detalle.tipo === "INVENTARIABLE" ? 1 : 0,
+                          step: 1,
                         },
                       }}
                     />
@@ -775,7 +775,7 @@ export function CompraFormPage() {
                           precioUnitario: event.target.value,
                         })
                       }
-                      slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
+                      slotProps={{ htmlInput: { min: 0, step: 1 } }}
                     />
                     <Box sx={{ pt: 1 }}>
                       <Typography variant="caption" color="text.secondary">

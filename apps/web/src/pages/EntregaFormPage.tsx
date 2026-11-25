@@ -376,7 +376,7 @@ export function EntregaFormPage() {
                             cantidad <= 0
                           }
                           helperText={excede ? "Supera el stock" : undefined}
-                          slotProps={{ htmlInput: { step: "0.001", min: "0" } }}
+                          slotProps={{ htmlInput: { step: 1, min: "0" } }}
                         />
                       </TableCell>
                       <TableCell align="right">
