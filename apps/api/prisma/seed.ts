@@ -74,6 +74,17 @@ const estados = [
 const categoriasConsumibles = [
   "Papelería y Elementos de Oficina",
   "Limpieza e Higiene",
+  "Ropa y Elementos de Seguridad",
+  "Insumos Informáticos y de Impresión",
+  "Electricidad e Iluminación",
+  "Ferretería y Mantenimiento",
+  "Pintura, Solventes y Químicos",
+  "Jardinería y Espacios Verdes",
+  "Botiquín y Primeros Auxilios",
+  "Señalización y Seguridad Vial",
+  "Materiales de Obra",
+  "Combustibles y Lubricantes",
+  "Insumos de Cafetería y Eventos",
   "Otros",
 ];
 

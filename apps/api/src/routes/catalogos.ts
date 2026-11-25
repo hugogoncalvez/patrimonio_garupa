@@ -281,8 +281,14 @@ catalogosRouter.delete("/estados/:id", async (req, res) => {
 
 catalogosRouter.get("/categorias-consumibles", async (_req, res) => {
   const categorias = await prisma.categoriaConsumible.findMany({
-    orderBy: { nombre: "asc" },
+    orderBy: { id: "asc" },
     include: { _count: { select: { consumibles: true } } },
+  });
+  categorias.sort((a, b) => {
+    const aEsOtros = a.nombre.toLowerCase() === "otros";
+    const bEsOtros = b.nombre.toLowerCase() === "otros";
+    if (aEsOtros === bEsOtros) return 0;
+    return aEsOtros ? 1 : -1;
   });
   res.json(categorias);
 });
