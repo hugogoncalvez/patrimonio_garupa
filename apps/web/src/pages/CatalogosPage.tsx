@@ -947,11 +947,11 @@ function PersonasTab() {
     onSuccess: async () => {
       const mensaje = editando ? "Persona actualizada" : "Persona creada";
       setDialogo(false);
-      await queryClient.invalidateQueries({ queryKey: ["personas"] });
       await alertaExito(
         mensaje,
         `${form.apellido.trim()}, ${form.nombre.trim()}`,
       );
+      await queryClient.invalidateQueries({ queryKey: ["personas"] });
     },
     onError: alertaError,
   });
@@ -960,8 +960,8 @@ function PersonasTab() {
     mutationFn: async (id: number) =>
       (await api.delete(`/catalogos/personas/${id}`)).data,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["personas"] });
       await alertaExito("Persona desactivada");
+      await queryClient.invalidateQueries({ queryKey: ["personas"] });
     },
     onError: alertaError,
   });
